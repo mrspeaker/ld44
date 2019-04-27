@@ -22,8 +22,18 @@ class WorldScene extends PIXI.Container {
       [resources.sprites_image.texture],
       true
     );
+
     this.addChild(this.tilemap);
     this.build(0);
+
+    this.tilemap.interactive = true;
+    this.tilemap.on("mouseover", (...args) => {
+      console.log(args);
+    });
+    this.tilemap.click = () => alert(1);
+    this.tilemap.buttonMode = true;
+
+    console.log(PIXI.InteractionManager); //(stage, renderer.view);
   }
 
   getNeighbours(idx, ns) {

@@ -2,10 +2,10 @@ import Camera from "./Camera.js";
 import WorldScene from "./scenes/WorldScene.js";
 
 class Game {
-  constructor(app) {
+  constructor(viewport) {
     this.time = 0;
     this.tick = 0;
-    this.camera = new Camera();
+    this.camera = viewport; //new Camera();
     this.scene = new WorldScene();
     this.update = this.update.bind(this);
   }
@@ -22,7 +22,7 @@ class Game {
   update(dt) {
     this.time += dt * (1 / 60);
     const z = Math.sin(Date.now() / 1000) * 0.01;
-    this.camera.zoom(1 + z, 1 + z);
+    // this.camera.zoom(1 + z, 1 + z);
     if (this.time > (this.tick + 1) * 1) {
       this.scene.tick(++this.tick);
     }
