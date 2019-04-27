@@ -9,7 +9,7 @@ const app = new PIXI.Application({
 });
 document.body.appendChild(app.view);
 
-PIXI.Loader.shared.load((loader, resources) => {
+PIXI.loader.add("atlas", "res/atlas.json").load((loader, resources) => {
   const game = new Game();
   app.stage.addChild(game.camera);
   app.ticker.add(game.update);

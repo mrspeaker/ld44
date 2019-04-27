@@ -1,6 +1,6 @@
 import PIXI from "../../lib/pixi.js";
 
-PIXI.Loader.shared.add("logo", "res/mrspeaker.net.png");
+PIXI.loader.add("logo", "res/mrspeaker.net.png");
 
 class Logo extends PIXI.Sprite {
   constructor() {
