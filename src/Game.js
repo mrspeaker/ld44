@@ -21,7 +21,8 @@ class Game {
   }
   update(dt) {
     this.time += dt * (1 / 60);
-    //this.camera.zoom(Math.sin(Date.now() / 1000), Math.sin(Date.now() / 1000));
+    const z = Math.sin(Date.now() / 1000) * 0.01;
+    this.camera.zoom(1 + z, 1 + z);
     if (this.time > (this.tick + 1) * 1) {
       this.scene.tick(++this.tick);
     }

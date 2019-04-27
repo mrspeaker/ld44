@@ -13,16 +13,17 @@ class WorldScene extends PIXI.Container {
       const x = i % this.tx;
       const y = (i / this.tx) | 0;
       return {
-        type: Math.random() < 0.01 ? 1 : 0
+        type: Math.random() < 0.05 ? 2 : Math.random() < 0.01 ? 1 : 0
       };
     });
 
     this.tilemap = new PIXI.tilemap.CompositeRectTileLayer(
       0,
-      [resources.atlas_image.texture],
+      [resources.sprites_image.texture],
       true
     );
     this.addChild(this.tilemap);
+    this.build(0);
   }
 
   getNeighbours(idx, ns) {
@@ -54,10 +55,14 @@ class WorldScene extends PIXI.Container {
       if (n > 1 && n < 4) {
         added.push(i);
       }
-      if (n > 4) died.push(i);
+      if (n > 5) died.push(i);
     });
-    added.forEach(i => (this.world[i].type = 1));
-    // died.forEach(i => (this.world[i].type = 0));
+    added.forEach(i => {
+      if (this.world[i].type !== 2) this.world[i].type = 1;
+    });
+    died.forEach(i => {
+      if (this.world[i].type == 1) this.world[i].type = 0;
+    });
     this.build(t);
   }
 
@@ -67,15 +72,16 @@ class WorldScene extends PIXI.Container {
 
     for (var i = 0; i < ty; i++)
       for (var j = 0; j < tx; j++) {
-        tilemap.addFrame("grass.png", j * size, i * size);
         const tile = world[i * tx + j];
-        if (tile.type == 1) tilemap.addFrame("tough.png", j * size, i * size);
+        tilemap.addFrame("x0y0", j * size, i * size);
+        if (tile.type == 1) tilemap.addFrame("x1y0", j * size, i * size);
+        if (tile.type == 2) tilemap.addFrame("x2y0", j * size, i * size);
       }
 
     // if you are lawful citizen, please use textures from
-    const textures = resources.atlas.textures;
-    tilemap.addFrame(textures["brick.png"], 2 * size, 2 * size);
-    tilemap.addFrame(textures["brick_wall.png"], 2 * size, 3 * size);
+    //  const textures = resources.sheet.textures;
+    //    tilemap.addFrame(textures["brick.png"], 2 * size, 2 * size);
+    //    tilemap.addFrame(textures["brick_wall.png"], 2 * size, 3 * size);
   }
 }
 
