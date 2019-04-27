@@ -1,11 +1,12 @@
 import Camera from "./Camera.js";
-import LogoScene from "./scenes/LogoScene.js";
+import WorldScene from "./scenes/WorldScene.js";
 
 class Game {
   constructor(app) {
     this.time = 0;
+    this.tick = 0;
     this.camera = new Camera();
-    this.scene = new LogoScene();
+    this.scene = new WorldScene();
     this.update = this.update.bind(this);
   }
   set scene(scene) {
@@ -15,8 +16,15 @@ class Game {
     this._scene = scene;
     this.camera.addChild(scene);
   }
+  get scene() {
+    return this._scene;
+  }
   update(dt) {
-    this.time += dt;
+    this.time += dt * (1 / 60);
+    //this.camera.zoom(Math.sin(Date.now() / 1000), Math.sin(Date.now() / 1000));
+    if (this.time > (this.tick + 1) * 1) {
+      this.scene.tick(++this.tick);
+    }
   }
 }
 

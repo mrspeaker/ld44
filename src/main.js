@@ -2,8 +2,8 @@ import PIXI from "../lib/pixi.js";
 import Game from "./Game.js";
 
 const app = new PIXI.Application({
-  width: 800,
-  height: 300,
+  width: 1000,
+  height: 600,
   backgroundColor: 0x1099bb,
   resolution: window.devicePixelRatio || 1
 });
