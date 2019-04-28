@@ -2,10 +2,10 @@ import Camera from "./Camera.js";
 import WorldScene from "./scenes/WorldScene.js";
 
 class Game {
-  constructor(viewport) {
+  constructor(app) {
     this.time = 0;
     this.tick = 0;
-    this.camera = viewport; //new Camera();
+    this.camera = new Camera(app, this.onTileClicked.bind(this)); //viewport; //new Camera();
     this.scene = new WorldScene();
     this.update = this.update.bind(this);
   }
@@ -18,6 +18,11 @@ class Game {
   }
   get scene() {
     return this._scene;
+  }
+  onTileClicked(x, y) {
+    if (this._scene) {
+      this._scene.onClick(x, y);
+    }
   }
   update(dt) {
     this.time += dt * (1 / 60);

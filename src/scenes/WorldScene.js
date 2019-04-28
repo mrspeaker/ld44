@@ -7,13 +7,13 @@ class WorldScene extends PIXI.Container {
     super();
 
     this.size = 32;
-    this.tx = 32;
-    this.ty = 20;
+    this.tx = 100;
+    this.ty = 100;
     this.world = [...Array(this.tx * this.ty)].map((_, i) => {
       const x = i % this.tx;
       const y = (i / this.tx) | 0;
       return {
-        type: Math.random() < 0.05 ? 2 : Math.random() < 0.01 ? 1 : 0
+        type: Math.random() < 0.05 ? 2 : 0 // Math.random() < 0.01 ? 1 : 0
       };
     });
 
@@ -24,16 +24,13 @@ class WorldScene extends PIXI.Container {
     );
 
     this.addChild(this.tilemap);
-    this.build(0);
+    this.build();
+  }
 
-    this.tilemap.interactive = true;
-    this.tilemap.on("mouseover", (...args) => {
-      console.log(args);
-    });
-    this.tilemap.click = () => alert(1);
-    this.tilemap.buttonMode = true;
-
-    console.log(PIXI.InteractionManager); //(stage, renderer.view);
+  onClick(x, y) {
+    const t = this.world[y * this.tx + x];
+    t.type = t.type === 1 ? 0 : 1;
+    this.build();
   }
 
   getNeighbours(idx, ns) {
@@ -62,7 +59,7 @@ class WorldScene extends PIXI.Container {
     this.world.forEach((t, i) => {
       this.getNeighbours(i, ns);
       const n = ns.reduce((ac, el) => ac + (el && el.type == 1 ? 1 : 0), 0);
-      if (n > 1 && n < 4) {
+      if (n > 2 && n < 4) {
         added.push(i);
       }
       if (n > 5) died.push(i);
@@ -76,7 +73,7 @@ class WorldScene extends PIXI.Container {
     this.build(t);
   }
 
-  build(frame) {
+  build() {
     const { tilemap, size, tx, ty, world } = this;
     tilemap.clear();
 
