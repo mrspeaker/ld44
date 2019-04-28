@@ -26,4 +26,5 @@ body > div {
 #container {
     border: 10px solid #dd4327;
     border-radius: 10px;
+    cursor: none;
 }

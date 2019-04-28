@@ -38,6 +38,7 @@ class Game {
     if (this.time > (this.tick + 1) * 1) {
       this.scene.tick(++this.tick);
     }
+    this.scene.update(this.time);
   }
 }
 

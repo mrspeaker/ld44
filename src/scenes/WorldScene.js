@@ -11,6 +11,7 @@ const Tiles = {
   bedrock: { sheet: "x1y2", base: true },
   building: { sheet: "x4y0", base: true }
 };
+
 const TilesById = Object.entries(Tiles).reduce((ac, [k, v], i) => {
   v.id = i;
   ac[v.id] = v;
@@ -37,6 +38,7 @@ class WorldScene extends PIXI.Container {
         type
       };
     });
+    this.actions = [];
 
     this.tilemap = new PIXI.tilemap.CompositeRectTileLayer(
       0,
@@ -47,7 +49,13 @@ class WorldScene extends PIXI.Container {
     this.addChild(this.tilemap);
 
     this.cursor = new PIXI.Sprite(resources.sprites.textures.x0y1);
+    this.axe = new PIXI.Sprite(resources.sprites.textures.x2y2);
+    this.axe.pivot.x = this.size * 0.3;
+    this.axe.pivot.y = this.size * 0.95;
+    this.axe.visible = false;
+
     this.addChild(this.cursor);
+    this.addChild(this.axe);
 
     this.build();
   }
@@ -81,7 +89,7 @@ class WorldScene extends PIXI.Container {
     }
 
     if (t.type == Tiles.tree.id) {
-      t.type = Tiles.coin.id;
+      this.startChop(t, xo, yo);
     }
     this.build();
   }
@@ -92,6 +100,24 @@ class WorldScene extends PIXI.Container {
     const yo = (y / size) | 0;
     cursor.x = xo * size;
     cursor.y = yo * size;
+  }
+
+  startChop(t, x, y) {
+    const { actions } = this;
+    if (actions.length) {
+      console.log("bzzz... already chopping");
+      //one at a time!
+      return;
+    }
+    actions.push({
+      type: "chop",
+      tile: t,
+      start: Date.now(),
+      chopTime: 4000,
+      started: false,
+      x,
+      y
+    });
   }
 
   getNeighbours(idx, ns) {
@@ -114,10 +140,37 @@ class WorldScene extends PIXI.Container {
     return ns;
   }
 
+  update(t) {
+    const { actions, size } = this;
+    if (actions.length) {
+      const a = actions[0];
+      if (!a.started) {
+        this.axe.visible = true;
+        a.doneAt = Date.now() + a.chopTime;
+        (function() {
+          function play(times) {
+            resources.chop.sound.play();
+            if (times-- > 0) setTimeout(() => play(times), 1000);
+          }
+          play(4);
+        })();
+
+        this.axe.x = a.x * size - 10;
+        this.axe.y = a.y * size;
+        a.started = true;
+      }
+      if (Date.now() > a.doneAt) {
+        a.tile.type = Tiles.coin.id;
+        actions.shift();
+        this.axe.visible = false;
+      }
+    }
+    this.axe.rotation = Math.abs(Math.sin(t * 3));
+  }
+
   tick(t) {
     const ns = [];
     const added = [];
-    const died = [];
     this.world.forEach((t, i) => {
       if (t.type === Tiles.skull.id) {
         if (Math.random() < 0.05) {
@@ -171,24 +224,16 @@ class WorldScene extends PIXI.Container {
             return n && n.type == c && !n.hide;
           })
         ) {
-          //added.push([i, Tiles.building]);
           t.type = Tiles.building.id;
           t.frame = Math.random() < 0.7 ? Tiles.building.sheet : "x5y0";
           sq.forEach(ni => (ns[ni].hide = true));
         }
-
-        // Figour out if 4 squares
-        // if so make TL a building
-        // make others "occupied" / hide = true
       }
     });
     added.forEach(([i, type]) => {
       //if (Math.random() < 0.5) return;
       const tile = this.world[i];
       tile.type = type.id;
-    });
-    died.forEach(i => {
-      // if (this.world[i].type == 1) this.world[i].type = 0;
     });
     this.build(t);
   }
@@ -207,20 +252,12 @@ class WorldScene extends PIXI.Container {
         if (!t.base) {
           tilemap.addFrame(Tiles.grass.sheet, j * size, i * size);
         }
-        //  if (tile.type !== Tiles.grass.id) {
         const yo = (t.yo || 0) * size;
         tilemap.addFrame(tile.frame || t.sheet, j * size, i * size + yo);
         if (tile.type === Tiles.building.id) {
           j++;
         }
-        // }
       }
-
-    // if you are lawful citizen, please use textures from
-    //  const textures = resources.sheet.textures;
-    //    tilemap.addFrame(textures["brick.png"], 2 * size, 2 * size);
-    //    tilemap.addFrame(textures["brick_wall.png"], 2 * size, 3 * size);
-    //   tilemap.addFrame(Tiles.building.sheet, 0, 0);
   }
 }
 
