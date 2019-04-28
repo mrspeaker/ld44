@@ -17,5 +17,6 @@ PIXI.loader
   .load((loader, resources) => {
     const game = new Game(app);
     app.stage.addChild(game.camera);
+    app.stage.addChild(game.ui);
     app.ticker.add(game.update);
   });

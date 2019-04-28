@@ -5,12 +5,15 @@ class Game {
   constructor(app) {
     this.time = 0;
     this.tick = 0;
+    this.tick_length = 4;
+    this.last_tick_time = 0;
     this.camera = new Camera(
       app,
       this.onClicked.bind(this),
       this.onMoved.bind(this)
     );
-    this.scene = new WorldScene();
+    this.ui = new PIXI.Container();
+    this.scene = new WorldScene({}, this.ui, this);
     this.update = this.update.bind(this);
   }
   set scene(scene) {
@@ -33,10 +36,11 @@ class Game {
   }
   update(dt) {
     this.time += dt * (1 / 60);
-    const z = Math.sin(Date.now() / 1000) * 0.01;
-    // this.camera.zoom(1 + z, 1 + z);
-    if (this.time > (this.tick + 1) * 1) {
-      this.scene.tick(++this.tick);
+    if (this.time > (this.tick + 1) * this.tick_length) {
+      if (this.time - this.last_tick_time >= this.tick_length) {
+        this.last_tick_time = this.time;
+        this.scene.tick(++this.tick);
+      }
     }
     this.scene.update(this.time);
   }
