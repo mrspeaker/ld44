@@ -6,9 +6,12 @@ const Tiles = {
   grass: { id: 0, sheet: "x0y0", base: true },
   coin: { id: 1, sheet: "x1y0" },
   tree: { id: 2, sheet: "x2y0", yo: -0.3 },
-  concrete: { id: 3, sheet: "x3y0", base: true }
+  concrete: { id: 3, sheet: "x3y0", base: true },
+  skull: { id: 4, sheet: "x1y1" },
+  bedrock: { id: 5, sheet: "x4y0", base: true }
 };
-const TilesById = Object.entries(Tiles).reduce((ac, [k, v]) => {
+const TilesById = Object.entries(Tiles).reduce((ac, [k, v], i) => {
+  v.id = i;
   ac[v.id] = v;
   ac[v.id].name = k;
   return ac;
@@ -27,7 +30,7 @@ class WorldScene extends PIXI.Container {
       let type = Tiles.grass.id;
       if (Math.random() < 0.3) type = Tiles.tree.id;
       if (y == 0 || x == 0 || x == this.tx - 1 || y == this.ty - 1)
-        type = Tiles.concrete.id;
+        type = Tiles.bedrock.id;
       return {
         type
       };
@@ -88,16 +91,41 @@ class WorldScene extends PIXI.Container {
     const added = [];
     const died = [];
     this.world.forEach((t, i) => {
-      this.getNeighbours(i, ns);
-      const n = ns.reduce((ac, el) => ac + (el && el.type == 1 ? 1 : 0), 0);
-      if (n > 2 && n < 4) {
-        added.push(i);
+      if (t.type === Tiles.skull.id) {
+        if (Math.random() < 0.05) {
+          t.type = Tiles.grass.id;
+        }
+        return;
       }
-      if (n > 5) died.push(i);
+      this.getNeighbours(i, ns);
+      const n = ns.reduce(
+        (ac, el) => {
+          if (!el) return ac;
+          if (el.type === Tiles.coin.id) ac.coins++;
+          if (el.type === Tiles.grass.id) ac.blanks++;
+          if (el.type === Tiles.tree.id) ac.trees++;
+          if (el.type === Tiles.concrete.id) ac.concrete++;
+          return ac;
+        },
+        { coins: 0, blanks: 0, trees: 0, concrete: 0 }
+      );
+      if (t.type === Tiles.grass.id) {
+        if (n.coins >= 2) added.push([i, Tiles.coin]);
+      } else if (t.type === Tiles.tree.id) {
+        if (n.coins > 0 && n.blanks === 0) {
+          // Starved.
+          added.push([i, Tiles.skull]);
+        }
+      } else if (t.type === Tiles.coin.id) {
+        if (n.coins + n.concrete === 8) {
+          added.push([i, Tiles.concrete]);
+        }
+      }
     });
-    added.forEach(i => {
-      if (this.world[i].type !== Tiles.tree.id)
-        this.world[i].type = Tiles.coin.id;
+    added.forEach(([i, type]) => {
+      //if (Math.random() < 0.5) return;
+      const tile = this.world[i];
+      tile.type = type.id;
     });
     died.forEach(i => {
       // if (this.world[i].type == 1) this.world[i].type = 0;
@@ -112,14 +140,15 @@ class WorldScene extends PIXI.Container {
     for (var i = 0; i < ty; i++)
       for (var j = 0; j < tx; j++) {
         const tile = world[i * tx + j];
-        if (!tile.base) {
+        const t = TilesById[tile.type];
+
+        if (!t.base) {
           tilemap.addFrame(Tiles.grass.sheet, j * size, i * size);
         }
-        if (tile.type !== Tiles.grass.id) {
-          const t = TilesById[tile.type];
-          const yo = (t.yo || 0) * size;
-          tilemap.addFrame(t.sheet, j * size, i * size + yo);
-        }
+        //  if (tile.type !== Tiles.grass.id) {
+        const yo = (t.yo || 0) * size;
+        tilemap.addFrame(t.sheet, j * size, i * size + yo);
+        // }
       }
 
     // if you are lawful citizen, please use textures from

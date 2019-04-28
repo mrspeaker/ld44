@@ -13,8 +13,8 @@ Outputs `res/sprite.json`
 
 const fs = require("fs");
 
-const xt = 4;
-const yt = 4;
+const xt = 8;
+const yt = 8;
 const size = 32;
 
 const json = {
