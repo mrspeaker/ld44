@@ -1,7 +1,7 @@
 import PIXI from "../lib/pixi.js";
 
 class Camera extends PIXI.extras.Viewport {
-  constructor(app, onTileClicked) {
+  constructor(app, onPointerClicked, onMouseMoved) {
     super({
       screenWidth: 1000,
       screenHeight: 600,
@@ -18,13 +18,18 @@ class Camera extends PIXI.extras.Viewport {
         direction: "all"
       })
       .clampZoom({ maxWidth: 2000, minWidth: 1000 })
-      .bounce()
+
       .on("drag-start", () => (this.isDrag = true))
       .on("drag-end", () => (this.isDrag = false))
       .on("click", e => {
         const p = e.data.global;
         const w = this.toWorld(p.x, p.y);
-        if (!this.isDrag) onTileClicked((w.x / 32) | 0, (w.y / 32) | 0);
+        if (!this.isDrag) onPointerClicked(w.x, w.y);
+      })
+      .on("mousemove", e => {
+        const p = e.data.global;
+        const w = this.toWorld(p.x, p.y);
+        onMouseMoved && onMouseMoved(w.x, w.y);
       });
   }
   zoomIn(x, y) {
