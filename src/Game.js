@@ -23,9 +23,9 @@ class Game {
   get scene() {
     return this._scene;
   }
-  onClicked(x, y) {
+  onClicked(x, y, isShift) {
     const { scene } = this;
-    scene && scene.onClicked && scene.onClicked(x, y);
+    scene && scene.onClicked && scene.onClicked(x, y, isShift);
   }
   onMoved(x, y) {
     const { scene } = this;

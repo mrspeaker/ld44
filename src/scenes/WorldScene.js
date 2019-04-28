@@ -3,12 +3,13 @@ import PIXI from "../../lib/pixi.js";
 const { resources } = PIXI.loader;
 
 const Tiles = {
-  grass: { id: 0, sheet: "x0y0", base: true },
-  coin: { id: 1, sheet: "x1y0" },
-  tree: { id: 2, sheet: "x2y0", yo: -0.3 },
-  concrete: { id: 3, sheet: "x3y0", base: true },
-  skull: { id: 4, sheet: "x1y1" },
-  bedrock: { id: 5, sheet: "x4y0", base: true }
+  grass: { sheet: "x0y0", base: true },
+  coin: { sheet: "x1y0" },
+  tree: { sheet: "x2y0", yo: -0.3 },
+  concrete: { sheet: "x3y0", base: true },
+  skull: { sheet: "x1y1" },
+  bedrock: { sheet: "x1y2", base: true },
+  building: { sheet: "x4y0", base: true }
 };
 const TilesById = Object.entries(Tiles).reduce((ac, [k, v], i) => {
   v.id = i;
@@ -29,8 +30,9 @@ class WorldScene extends PIXI.Container {
       const y = (i / this.tx) | 0;
       let type = Tiles.grass.id;
       if (Math.random() < 0.3) type = Tiles.tree.id;
-      if (y == 0 || x == 0 || x == this.tx - 1 || y == this.ty - 1)
+      if (y == 0 || x == 0 || x == this.tx - 1 || y == this.ty - 1) {
         type = Tiles.bedrock.id;
+      }
       return {
         type
       };
@@ -50,12 +52,37 @@ class WorldScene extends PIXI.Container {
     this.build();
   }
 
-  onClicked(x, y) {
+  onClicked(x, y, isShift) {
     const { size } = this;
     const xo = (x / size) | 0;
     const yo = (y / size) | 0;
-    const t = this.world[yo * this.tx + xo];
-    t.type = t.type === Tiles.coin.id ? Tiles.grass.id : Tiles.coin.id;
+    const i = yo * this.tx + xo;
+    const t = this.world[i];
+
+    if (isShift) {
+      const ns = this.getNeighbours(i, []);
+      const n = ns.reduce(
+        (ac, el) => {
+          if (!el || el.type === Tiles.bedrock.id) {
+            ac.concrete++;
+            return ac;
+          }
+          if (el.type === Tiles.coin.id) ac.coins++;
+          if (el.type === Tiles.grass.id) ac.blanks++;
+          if (el.type === Tiles.tree.id) ac.trees++;
+          if (el.type === Tiles.concrete.id) ac.concrete++;
+          if (el.type === Tiles.building.id) ac.buildings++;
+          return ac;
+        },
+        { coins: 0, blanks: 0, trees: 0, concrete: 0, buildings: 0 }
+      );
+      console.log(n, ns);
+      return;
+    }
+
+    if (t.type == Tiles.tree.id) {
+      t.type = Tiles.coin.id;
+    }
     this.build();
   }
 
@@ -84,6 +111,7 @@ class WorldScene extends PIXI.Container {
         }
       }
     }
+    return ns;
   }
 
   tick(t) {
@@ -97,29 +125,61 @@ class WorldScene extends PIXI.Container {
         }
         return;
       }
+      if (t.hide || t.type == Tiles.building.id) return;
+
       this.getNeighbours(i, ns);
       const n = ns.reduce(
         (ac, el) => {
-          if (!el) return ac;
+          if (!el || el.type === Tiles.bedrock.id) {
+            ac.concrete++;
+            return ac;
+          }
           if (el.type === Tiles.coin.id) ac.coins++;
           if (el.type === Tiles.grass.id) ac.blanks++;
           if (el.type === Tiles.tree.id) ac.trees++;
           if (el.type === Tiles.concrete.id) ac.concrete++;
+          if (el.type === Tiles.building.id) ac.buildings++;
           return ac;
         },
-        { coins: 0, blanks: 0, trees: 0, concrete: 0 }
+        { coins: 0, blanks: 0, trees: 0, concrete: 0, buildings: 0 }
       );
+      const crapThings = n.coins + n.concrete + n.buildings;
+
       if (t.type === Tiles.grass.id) {
-        if (n.coins >= 2) added.push([i, Tiles.coin]);
+        if (n.coins >= 2 || crapThings > 7) added.push([i, Tiles.coin]);
       } else if (t.type === Tiles.tree.id) {
         if (n.coins > 0 && n.blanks === 0) {
           // Starved.
           added.push([i, Tiles.skull]);
         }
       } else if (t.type === Tiles.coin.id) {
-        if (n.coins + n.concrete === 8) {
+        if (crapThings >= 8) {
           added.push([i, Tiles.concrete]);
         }
+        if (n.trees > 0) {
+          // "Magic flip" to kill some trees randomly.
+          if (Math.random() < 0.005) {
+            ns.find(n => n && n.type === Tiles.tree.id).type = Tiles.skull.id;
+          }
+        }
+      } else if (n.concrete > 3 && t.type === Tiles.concrete.id && !t.hide) {
+        const c = Tiles.concrete.id;
+        const sq = [5, 7, 8];
+        if (
+          sq.every(ni => {
+            const n = ns[ni];
+            return n && n.type == c && !n.hide;
+          })
+        ) {
+          //added.push([i, Tiles.building]);
+          t.type = Tiles.building.id;
+          t.frame = Math.random() < 0.7 ? Tiles.building.sheet : "x5y0";
+          sq.forEach(ni => (ns[ni].hide = true));
+        }
+
+        // Figour out if 4 squares
+        // if so make TL a building
+        // make others "occupied" / hide = true
       }
     });
     added.forEach(([i, type]) => {
@@ -142,12 +202,17 @@ class WorldScene extends PIXI.Container {
         const tile = world[i * tx + j];
         const t = TilesById[tile.type];
 
+        if (tile.hide) continue;
+
         if (!t.base) {
           tilemap.addFrame(Tiles.grass.sheet, j * size, i * size);
         }
         //  if (tile.type !== Tiles.grass.id) {
         const yo = (t.yo || 0) * size;
-        tilemap.addFrame(t.sheet, j * size, i * size + yo);
+        tilemap.addFrame(tile.frame || t.sheet, j * size, i * size + yo);
+        if (tile.type === Tiles.building.id) {
+          j++;
+        }
         // }
       }
 
@@ -155,6 +220,7 @@ class WorldScene extends PIXI.Container {
     //  const textures = resources.sheet.textures;
     //    tilemap.addFrame(textures["brick.png"], 2 * size, 2 * size);
     //    tilemap.addFrame(textures["brick_wall.png"], 2 * size, 3 * size);
+    //   tilemap.addFrame(Tiles.building.sheet, 0, 0);
   }
 }
 
