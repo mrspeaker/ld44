@@ -9,7 +9,27 @@ const app = new PIXI.Application({
   resolution: window.devicePixelRatio || 1
 });
 
-document.querySelector("#container").appendChild(app.view);
+const container = document.querySelector("#container");
+container.appendChild(app.view);
+
+function toggleFullScreen() {
+  if (!document.mozFullScreen && !document.webkitFullScreen) {
+    if (container.mozRequestFullScreen) {
+      container.mozRequestFullScreen();
+    } else {
+      container.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+    }
+  } else {
+    if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else {
+      document.webkitCancelFullScreen();
+    }
+  }
+}
+document.querySelector("#fs").addEventListener("click", () => {
+  toggleFullScreen();
+});
 
 PIXI.loader
   .add("sprites", "res/sprites.json")

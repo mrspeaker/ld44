@@ -1,4 +1,4 @@
-# LD44
+# LD44: Your life is currency
 
 [Test it out](https://mrspeaker.github.io/ld44/)
 
