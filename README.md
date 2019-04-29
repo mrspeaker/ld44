@@ -24,7 +24,6 @@ TODO:
 - use tree% + time to dictate speed / $$$
 - if first spread doesn't come after $4, add two coins!
 - if last tree kill was > X seconds, add two coins somewhere
-- teach camera pan/zoom?
 - "Game over" congratulations.
 - focus screen on first spread (in case moved)
 

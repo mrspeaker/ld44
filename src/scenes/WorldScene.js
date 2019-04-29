@@ -373,6 +373,15 @@ class WorldScene extends PIXI.Container {
   update(t) {
     const { actions, size, flags, dialogs, entities } = this;
 
+    // Pan on start
+    if (t < 4) {
+      let o = (4 - t) * 10;
+      o = o * o;
+      this.game.camera.left = o;
+      this.game.camera.top = o;
+      return;
+    }
+
     entities.children.forEach(e => e.update(t));
 
     // TODO: This is dumb - just for tree click (only 1 "action"!)
