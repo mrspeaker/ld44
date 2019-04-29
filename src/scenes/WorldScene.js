@@ -25,6 +25,7 @@ class WorldScene extends PIXI.Container {
   constructor(bounds, ui, game) {
     super();
 
+    this.startTrees = 2950;
     this.size = 32;
     this.tx = 100;
     this.ty = 100;
@@ -34,7 +35,7 @@ class WorldScene extends PIXI.Container {
       const x = i % this.tx;
       const y = (i / this.tx) | 0;
       let type = Tiles.grass.id;
-      if (Math.random() < 0.3) type = Tiles.tree.id;
+      //  if (Math.random() < 0.3) type = Tiles.tree.id;
       if (y == 0 || x == 0 || x == this.tx - 1 || y == this.ty - 1) {
         type = Tiles.bedrock.id;
       }
@@ -42,6 +43,16 @@ class WorldScene extends PIXI.Container {
         type
       };
     });
+
+    // Add in the trees
+    let trees = this.startTrees;
+    while (trees > 0) {
+      const ti = (Math.random() * this.world.length) | 0;
+      if (this.world[ti].type == Tiles.grass.id) {
+        this.world[ti].type = Tiles.tree.id;
+        trees--;
+      }
+    }
 
     this.tilemap = new PIXI.tilemap.CompositeRectTileLayer(
       0,
@@ -106,13 +117,27 @@ class WorldScene extends PIXI.Container {
       stroke: "#4a1850",
       strokeThickness: 5
     });
+    this.prices = { coin: 1, concrete: 13, building: 87 };
 
     this.$$ = 0;
     this.$ = new PIXI.Text(`$${this.$$}`, style);
     this.$.anchor.set(0.5);
     this.$.x = 500;
     this.$.y = 300;
+    this.$.visible = false;
     ui.addChild(this.$);
+
+    this.dbg = new PIXI.Text(
+      "dbg",
+      new PIXI.TextStyle({
+        fontFamily: "monospace",
+        fontSize: 8,
+        fill: "#ffffff"
+      })
+    );
+    this.dbg.x = 10;
+    this.dbg.y = 60;
+    ui.addChild(this.dbg);
   }
 
   addNextDialog(flag) {
@@ -127,7 +152,8 @@ class WorldScene extends PIXI.Container {
 
   add$($$, x, y) {
     this.$$ += $$;
-    this.$.text = `$${this.$$}`;
+    this.$.visible = true;
+    this.$.text = `$${this.$$.toLocaleString("fullwide")}`;
 
     // add oneup by x,y or tile idx
     if (y) {
@@ -207,6 +233,7 @@ class WorldScene extends PIXI.Container {
   tick(t) {
     const ns = [];
     const added = [];
+    let trees = 0;
     this.world.forEach((t, i) => {
       if (t.type === Tiles.skull.id) {
         if (Math.random() < 0.05) {
@@ -214,6 +241,7 @@ class WorldScene extends PIXI.Container {
         }
         return;
       }
+      if (t.type === Tiles.tree.id) trees++;
       if (t.hide || t.type == Tiles.building.id) return;
 
       this.getNeighbours(i, ns);
@@ -239,6 +267,7 @@ class WorldScene extends PIXI.Container {
       if (t.type === Tiles.grass.id) {
         if (n.coins >= 2 || crapThings > 7) {
           added.push([i, Tiles.coin]);
+          this.add$(this.prices.coin);
 
           // TODO: remove flags - make events
           const { flags } = this;
@@ -256,7 +285,7 @@ class WorldScene extends PIXI.Container {
         }
       } else if (t.type === Tiles.coin.id) {
         if (crapThings >= 8) {
-          this.add$(37, i);
+          this.add$(this.prices.concrete, i);
           added.push([i, Tiles.concrete]);
         }
         if (n.trees > 0) {
@@ -277,7 +306,7 @@ class WorldScene extends PIXI.Container {
           t.type = Tiles.building.id;
           t.frame = Math.random() < 0.7 ? Tiles.building.sheet : "x5y0";
           sq.forEach(ni => (ns[ni].hide = true));
-          this.add$(4999, i);
+          this.add$(this.prices.building, i);
         }
       }
     });
@@ -289,6 +318,28 @@ class WorldScene extends PIXI.Container {
 
     // Rebiuld the tilemap
     this.build(t);
+    let multiplier = 1;
+    const { prices } = this;
+    if (this.$$ > 1000) {
+      multiplier = Math.min(1.1, 1 + t / 1500);
+      prices.coin = Math.round(prices.coin * multiplier);
+      prices.concrete = Math.round(prices.concrete * multiplier);
+      prices.building = Math.round(prices.building * multiplier);
+
+      if (this.game.tick_length <= 2) {
+        const speed = this.game.tick_length > 1 ? 0.08 : 0.005;
+        this.game.tick_length = Math.max(0.1, this.game.tick_length - speed);
+      }
+    }
+
+    this.dbg.text =
+      ((1 - trees / this.startTrees) * 100).toFixed(0) +
+      "% " +
+      this.game.tick_length.toFixed(5) +
+      "-" +
+      prices.building +
+      " - " +
+      multiplier.toFixed(3);
   }
 
   build() {
@@ -351,7 +402,7 @@ class WorldScene extends PIXI.Container {
         }
         a.tile.type = Tiles.coin.id;
 
-        this.add$(1, a.x * size + 16, a.y * size);
+        this.add$(this.prices.coin, a.x * size + 16, a.y * size);
         actions.shift();
         this.axe.visible = false;
         this.build();
@@ -371,7 +422,7 @@ class WorldScene extends PIXI.Container {
             this.game.tick_length = 3;
           }
           if (d.msg.nextMsg == "fourth_spread") {
-            this.game.tick_length = 1;
+            this.game.tick_length = 2;
           }
         }
       }

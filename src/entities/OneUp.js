@@ -15,11 +15,14 @@ class OneUp extends PIXI.Text {
     this.x = x;
     this.y = y;
     this.ticks = 100;
+    this.speed = Math.random();
   }
 
   update() {
     // move up, fade out
-    this.y -= 0.4;
+    this.y -= this.speed;
+    const a = this.ticks / 100;
+    this.alpha = a * a;
     if (this.ticks-- <= 0) {
       this.parent.removeChild(this);
     }

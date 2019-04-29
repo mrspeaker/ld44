@@ -14,6 +14,22 @@ The code is a crazy bunch of crazy... but will be fun to refactor!
 
 ![Sprite sheet](https://raw.githubusercontent.com/mrspeaker/ld44/master/res/sprites.png)
 
+## Jam notes
+
+hmm, could get something in for the jam!
+
+TODO:
+
+- make it take almost exactly 3 minutes.
+- use tree% to dictate speed / $$$
+- $ font gets bigger over time, pulses?
+- would be cool to force you to cut down last tree.
+- music starts jolly/ditty... goes darker and horrible
+- add/tweak text comments
+- "Game over" congratulations.
+- focus screen on first spread (in case moved)
+- teach camera pan/zoom?
+
 ## Pre LD notes
 OOOh, it's happening again. Not sure where this will go, but probably I'll be using:
 
