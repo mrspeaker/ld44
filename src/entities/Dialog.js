@@ -1,5 +1,7 @@
 import PIXI from "../../lib/pixi.js";
 
+const { resources } = PIXI.loader;
+
 class Dialog extends PIXI.Container {
   constructor(ui) {
     super();
@@ -21,9 +23,9 @@ class Dialog extends PIXI.Container {
     });
 
     var text = new PIXI.Text("", style);
-    //text.anchor.set(0.5);
-    text.x = 10;
-    text.y = 12;
+    text.anchor.set(0.5);
+    text.x = 250;
+    text.y = 20;
     this.addChild(text);
     this.text = text;
 
@@ -33,6 +35,9 @@ class Dialog extends PIXI.Container {
   show(text) {
     this.text.text = text;
     this.visible = !!text;
+    if (this.visible) {
+      resources.dialogbeep.sound.play();
+    }
   }
 }
 

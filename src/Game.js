@@ -43,6 +43,12 @@ class Game {
       if (this.time - this.last_tick_time >= this.tick_length) {
         this.last_tick_time = this.time;
         this.scene.tick(++this.tick);
+
+        const mod = this.tick_length <= 1.0 ? 4 : 8;
+        //x        this.scene.dgb.text = this.tick_length;
+        if (!this.gameover && this.tick > 40 && this.tick % mod == 0) {
+          PIXI.loader.resources.pling.sound.play();
+        }
       }
     }
     this.scene.update(this.time);

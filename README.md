@@ -20,26 +20,30 @@ hmm, could get something in for the jam!
 
 TODO:
 
-- make it take almost exactly 3 minutes.
-- use tree% + time to dictate speed / $$$
-- add/tweak text comments
-- move comments to center, disappear after x seconds.
-- show "building" comment after first building (don't worry about concrete)
-- if first spread doesn't come after $4, add two coins!
-- if last tree kill was > X seconds, add two coins somewhere
-- focus screen on first spread (in case moved)
+- Comment dialog
+-- add/tweak text comments
+-- show "building" comment after first building (don't worry about concrete)
 
-- would be cool to force you to cut down last tree.
-- music starts jolly/ditty... goes darker and horrible
-- $ font gets bigger over time, pulses?
+- make sure "get" CA at start
+-- if first spread doesn't come after $4, add two coins!
+-- focus screen on first spread (in case moved)
+-- if last tree kill was > X seconds, add two coins somewhere (so not stuck)
 
+- Audio
+-- sfx for... building? $1000? (while you still think it's good).a million bucks?
 
 Low Priority:
+- pacing: use tree% + time to dictate speed / $$$
+- pacing:  make it take almost exactly 3 minutes. (maybe not so important -seem to be about that)
+- would be cool to force you to cut down last tree.
+- audio sad trombone (or happy do do da dooo! trumpet?!)  death screen sfx
 - More dead states for trees (turn brown/black)
 - Building anim - take a tick to build the building
 - SPin up $ in UPdate instead of updating instatly in Tick
 - make roads when concrete in a line
 - make the world repeateable - no edge.
+-- $ font gets bigger over time, pulses?
+-- music starts jolly/ditty... goes darker and horrible
 
 ## Pre LD notes
 OOOh, it's happening again. Not sure where this will go, but probably I'll be using:

@@ -78,6 +78,8 @@ class WorldScene extends PIXI.Container {
     this.actions = [];
 
     this.dialog = new Dialog(ui);
+    this.dialog.x = 250;
+    this.dialog.y = 480;
     this.dialog.show("Chop some wood to start earning $$$!");
     // TODO: fire events for dialog, remove from here
     this.flags = {
@@ -193,9 +195,10 @@ class WorldScene extends PIXI.Container {
       console.log(ns);
       return;
     }
-
     if (t.type == Tiles.tree.id) {
       this.startChop(t, xo, yo);
+    } else {
+      resources.mouse.sound.play();
     }
   }
 
@@ -249,6 +252,7 @@ class WorldScene extends PIXI.Container {
     const ns = [];
     const added = [];
     let trees = 0;
+    let addedABuilding = false;
     this.world.forEach((t, i) => {
       if (t.type === Tiles.skull.id) {
         if (Math.random() < 0.05) {
@@ -322,6 +326,7 @@ class WorldScene extends PIXI.Container {
           t.frame = Math.random() < 0.7 ? Tiles.building.sheet : "x5y0";
           sq.forEach(ni => (ns[ni].hide = true));
           this.add$(this.prices.building, i);
+          addedABuilding = true;
         }
       }
     });
@@ -330,6 +335,10 @@ class WorldScene extends PIXI.Container {
       const tile = this.world[i];
       tile.type = type.id;
     });
+
+    if (addedABuilding) {
+      resources.kick.sound.play();
+    }
 
     // Rebiuld the tilemap
     this.build(t);
@@ -344,6 +353,7 @@ class WorldScene extends PIXI.Container {
     }
     if (trees == 0) {
       this.gameOver.visible = true;
+      this.game.gameover = true;
     }
 
     let multiplier = 1;
@@ -420,12 +430,12 @@ class WorldScene extends PIXI.Container {
         }
         this.axe.visible = true;
         a.doneAt = Date.now() + a.chopTime;
-        (function() {
+        (function chopSFX() {
           function play(times) {
             resources.chop.sound.play();
-            if (times-- > 0) setTimeout(() => play(times), 1000);
+            if (times-- > 0) setTimeout(() => play(times), 700);
           }
-          play(4);
+          play(6);
         })();
 
         this.axe.x = a.x * size - 10;
