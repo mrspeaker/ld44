@@ -28,6 +28,7 @@ class WorldScene extends PIXI.Container {
     this.tx = 100;
     this.ty = 100;
     this.game = game; // TODO: this is just to increase tick speed - move tick speed in here!
+
     this.world = [...Array(this.tx * this.ty)].map((_, i) => {
       const x = i % this.tx;
       const y = (i / this.tx) | 0;
@@ -40,29 +41,30 @@ class WorldScene extends PIXI.Container {
         type
       };
     });
-    this.actions = [];
+
     this.tilemap = new PIXI.tilemap.CompositeRectTileLayer(
       0,
       [resources.sprites_image.texture],
       true
     );
-
     this.addChild(this.tilemap);
+    this.build();
 
     this.cursor = new PIXI.Sprite(resources.sprites.textures.x0y1);
+    this.addChild(this.cursor);
+
     this.axe = new PIXI.Sprite(resources.sprites.textures.x2y2);
     this.axe.pivot.x = this.size * 0.3;
     this.axe.pivot.y = this.size * 0.95;
     this.axe.visible = false;
-
-    this.addChild(this.cursor);
     this.addChild(this.axe);
 
-    this.build();
+    // TODO: better handling of "actions" - not really used in the end.
+    this.actions = [];
 
     this.dialog = new Dialog(ui);
     this.dialog.show("Chop some wood to start earning $$$!");
-
+    // TODO: fire events for dialog, remove from here
     this.flags = {
       first_chop: { done: false, msg: "" },
       first_chop_done: {
@@ -96,7 +98,6 @@ class WorldScene extends PIXI.Container {
 
   addNextDialog(flag) {
     // TODO: sort by time
-    console.log("adding next");
     if (flag.nextMsg) {
       this.dialogs.push({
         msg: this.flags[flag.nextMsg],
@@ -114,29 +115,13 @@ class WorldScene extends PIXI.Container {
 
     if (isShift) {
       const ns = this.getNeighbours(i, []);
-      const n = ns.reduce(
-        (ac, el) => {
-          if (!el || el.type === Tiles.bedrock.id) {
-            ac.concrete++;
-            return ac;
-          }
-          if (el.type === Tiles.coin.id) ac.coins++;
-          if (el.type === Tiles.grass.id) ac.blanks++;
-          if (el.type === Tiles.tree.id) ac.trees++;
-          if (el.type === Tiles.concrete.id) ac.concrete++;
-          if (el.type === Tiles.building.id) ac.buildings++;
-          return ac;
-        },
-        { coins: 0, blanks: 0, trees: 0, concrete: 0, buildings: 0 }
-      );
-      console.log(n, ns);
+      console.log(ns);
       return;
     }
 
     if (t.type == Tiles.tree.id) {
       this.startChop(t, xo, yo);
     }
-    this.build();
   }
 
   onMoved(x, y) {
@@ -198,6 +183,7 @@ class WorldScene extends PIXI.Container {
       if (t.hide || t.type == Tiles.building.id) return;
 
       this.getNeighbours(i, ns);
+      // TODO: clean up count
       const n = ns.reduce(
         (ac, el) => {
           if (!el || el.type === Tiles.bedrock.id) {
@@ -213,24 +199,25 @@ class WorldScene extends PIXI.Container {
         },
         { coins: 0, blanks: 0, trees: 0, concrete: 0, buildings: 0 }
       );
+
       const crapThings = n.coins + n.concrete + n.buildings;
 
-      const { flags } = this;
       if (t.type === Tiles.grass.id) {
         if (n.coins >= 2 || crapThings > 7) {
           added.push([i, Tiles.coin]);
+
+          // TODO: remove flags - make events
+          const { flags } = this;
           if (!flags.init_spread.done) {
             flags.init_spread.done = true;
             flags.init_spread.time = Date.now();
             this.dialog.show(flags.init_spread.msg);
-
             this.addNextDialog(flags.init_spread);
-            console.log("ddd", this.dialogs[0].time);
           }
         }
       } else if (t.type === Tiles.tree.id) {
         if (n.coins > 0 && n.blanks === 0) {
-          // Starved.
+          // Starved, so die
           added.push([i, Tiles.skull]);
         }
       } else if (t.type === Tiles.coin.id) {
@@ -238,7 +225,7 @@ class WorldScene extends PIXI.Container {
           added.push([i, Tiles.concrete]);
         }
         if (n.trees > 0) {
-          // "Magic flip" to kill some trees randomly.
+          // "Magic flip" to kill some trees randomly - stops pockets of green!
           if (Math.random() < 0.005) {
             ns.find(n => n && n.type === Tiles.tree.id).type = Tiles.skull.id;
           }
@@ -258,11 +245,13 @@ class WorldScene extends PIXI.Container {
         }
       }
     });
+    // Make changes after initial pass over tiles
     added.forEach(([i, type]) => {
-      //if (Math.random() < 0.5) return;
       const tile = this.world[i];
       tile.type = type.id;
     });
+
+    // Rebiuld the tilemap
     this.build(t);
   }
 
@@ -290,9 +279,12 @@ class WorldScene extends PIXI.Container {
 
   update(t) {
     const { actions, size, flags, dialogs } = this;
+
+    // TODO: This is dumb - just for tree click (only 1 "action"!)
     if (actions.length) {
       const a = actions[0];
       if (!a.started) {
+        // TODO: flags is also dumb
         if (!flags.first_chop.done) {
           this.dialog.show(flags.first_chop.msg);
           flags.first_chop.done = true;
@@ -325,6 +317,7 @@ class WorldScene extends PIXI.Container {
       }
     }
 
+    // TODO: dialogs... also dumb.
     if (dialogs.length) {
       const d = dialogs[0];
       if (Date.now() > d.time) {
@@ -334,17 +327,17 @@ class WorldScene extends PIXI.Container {
         dialogs.shift();
         if (d.msg.nextMsg) {
           if (d.msg.nextMsg == "third_spread") {
-            console.log("goint to 3 seconds");
             this.game.tick_length = 3;
           }
           if (d.msg.nextMsg == "fourth_spread") {
-            console.log("next is1sec3");
             this.game.tick_length = 1;
           }
         }
       }
     }
-    this.axe.rotation = Math.abs(Math.sin(t * 3));
+
+    // Swing an axe
+    if (this.axe.visible) this.axe.rotation = Math.abs(Math.sin(t * 3));
   }
 }
 
