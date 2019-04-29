@@ -22,17 +22,23 @@ TODO:
 
 - make it take almost exactly 3 minutes.
 - use tree% + time to dictate speed / $$$
+- add/tweak text comments
 - if first spread doesn't come after $4, add two coins!
 - if last tree kill was > X seconds, add two coins somewhere
 - "Game over" congratulations.
 - focus screen on first spread (in case moved)
 
-- add/tweak text comments
 - would be cool to force you to cut down last tree.
 - music starts jolly/ditty... goes darker and horrible
-- grass tile goes brown over game
 - $ font gets bigger over time, pulses?
 
+
+Low Priority:
+- More dead states for trees (turn brown/black)
+- Building anim - take a tick to build the building
+- SPin up $ in UPdate instead of updating instatly in Tick
+- make roads when concrete in a line
+- make the world repeateable - no edge.
 
 ## Pre LD notes
 OOOh, it's happening again. Not sure where this will go, but probably I'll be using:

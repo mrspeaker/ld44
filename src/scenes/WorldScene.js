@@ -320,8 +320,12 @@ class WorldScene extends PIXI.Container {
     this.build(t);
 
     const percComplete = 1 - trees / this.startTrees;
-    if (percComplete > 50) {
+    if (percComplete > 0.5) {
       Tiles.grass.sheet = "x0y2";
+    }
+    if (percComplete > 0.75) {
+      Tiles.grass.sheet = "x0y3";
+      Tiles.tree.sheet = "x2y1";
     }
 
     let multiplier = 1;
