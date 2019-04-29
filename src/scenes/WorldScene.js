@@ -1,5 +1,6 @@
 import PIXI from "../../lib/pixi.js";
 import Dialog from "../entities/Dialog.js";
+import OneUp from "../entities/OneUp.js";
 
 const { resources } = PIXI.loader;
 
@@ -50,6 +51,9 @@ class WorldScene extends PIXI.Container {
     this.addChild(this.tilemap);
     this.build();
 
+    this.entities = new PIXI.Container();
+    this.addChild(this.entities);
+
     this.cursor = new PIXI.Sprite(resources.sprites.textures.x0y1);
     this.addChild(this.cursor);
 
@@ -94,6 +98,21 @@ class WorldScene extends PIXI.Container {
     };
 
     this.dialogs = [];
+
+    const style = new PIXI.TextStyle({
+      fontFamily: "monospace",
+      fontSize: 40,
+      fill: "#ffffff",
+      stroke: "#4a1850",
+      strokeThickness: 5
+    });
+
+    this.$$ = 0;
+    this.$ = new PIXI.Text(`$${this.$$}`, style);
+    this.$.anchor.set(0.5);
+    this.$.x = 500;
+    this.$.y = 300;
+    ui.addChild(this.$);
   }
 
   addNextDialog(flag) {
@@ -103,6 +122,21 @@ class WorldScene extends PIXI.Container {
         msg: this.flags[flag.nextMsg],
         time: Date.now() + flag.after
       });
+    }
+  }
+
+  add$($$, x, y) {
+    this.$$ += $$;
+    this.$.text = `$${this.$$}`;
+
+    // add oneup by x,y or tile idx
+    if (y) {
+      this.entities.addChild(new OneUp(x, y, $$));
+    } else if (x) {
+      const { tx, ty, size } = this;
+      const xx = x % tx;
+      const yy = (x / ty) | 0;
+      this.entities.addChild(new OneUp(xx * size + 16, yy * size, $$));
     }
   }
 
@@ -153,8 +187,8 @@ class WorldScene extends PIXI.Container {
   getNeighbours(idx, ns) {
     ns.length = 0;
     const { tx, ty, world } = this;
-    const x = idx % this.tx;
-    const y = (idx / this.tx) | 0;
+    const x = idx % tx;
+    const y = (idx / tx) | 0;
 
     for (let j = -1; j < 2; j++) {
       for (let i = -1; i < 2; i++) {
@@ -222,6 +256,7 @@ class WorldScene extends PIXI.Container {
         }
       } else if (t.type === Tiles.coin.id) {
         if (crapThings >= 8) {
+          this.add$(37, i);
           added.push([i, Tiles.concrete]);
         }
         if (n.trees > 0) {
@@ -242,6 +277,7 @@ class WorldScene extends PIXI.Container {
           t.type = Tiles.building.id;
           t.frame = Math.random() < 0.7 ? Tiles.building.sheet : "x5y0";
           sq.forEach(ni => (ns[ni].hide = true));
+          this.add$(4999, i);
         }
       }
     });
@@ -278,7 +314,9 @@ class WorldScene extends PIXI.Container {
   }
 
   update(t) {
-    const { actions, size, flags, dialogs } = this;
+    const { actions, size, flags, dialogs, entities } = this;
+
+    entities.children.forEach(e => e.update(t));
 
     // TODO: This is dumb - just for tree click (only 1 "action"!)
     if (actions.length) {
@@ -312,6 +350,8 @@ class WorldScene extends PIXI.Container {
           flags.first_chop_done.done = true;
         }
         a.tile.type = Tiles.coin.id;
+
+        this.add$(1, a.x * size + 16, a.y * size);
         actions.shift();
         this.axe.visible = false;
         this.build();
@@ -338,7 +378,7 @@ class WorldScene extends PIXI.Container {
     }
 
     // Swing an axe
-    if (this.axe.visible) this.axe.rotation = Math.abs(Math.sin(t * 3));
+    if (this.axe.visible) this.axe.rotation = Math.abs(Math.sin(t * 5));
   }
 }
 
