@@ -53,7 +53,6 @@ class WorldScene extends PIXI.Container {
         trees--;
       }
     }
-
     this.tilemap = new PIXI.tilemap.CompositeRectTileLayer(
       0,
       [resources.sprites_image.texture],
@@ -93,21 +92,23 @@ class WorldScene extends PIXI.Container {
         done: false,
         msg: "Hey! Your wealth is beginning to spread!",
         nextMsg: "second_spread",
-        after: 5000
+        after: 6000
       },
       second_spread: {
         done: false,
-        msg: "Things are trending up",
+        msg: "You can afford some upgrades!",
         nextMsg: "third_spread",
         after: 5000
       },
-      third_spread: {
+      third_spread: { done: false, msg: "" },
+      blank: { done: false, msg: "" },
+      building1: { done: false, msg: "", nextMsg: "building", after: 1 },
+      building: {
         done: false,
         msg: "Big money in real estate... good for you.",
-        nextMsg: "fourth_spread",
+        nextMsg: "blank",
         after: 5000
-      },
-      fourth_spread: { done: false, msg: "" }
+      }
     };
 
     this.dialogs = [];
@@ -338,6 +339,10 @@ class WorldScene extends PIXI.Container {
 
     if (addedABuilding) {
       resources.kick.sound.play();
+      if (!this.flags.building1.done) {
+        this.flags.building1.done = true;
+        this.addNextDialog(this.flags.building1);
+      }
     }
 
     // Rebiuld the tilemap
@@ -354,6 +359,13 @@ class WorldScene extends PIXI.Container {
     if (trees == 0) {
       this.gameOver.visible = true;
       this.game.gameover = true;
+    }
+
+    // Emergency coins if you hadnt placed any next to each other!
+    if (this.$$ > 4 && !this.flags.init_spread.done) {
+      this.world[505].type = Tiles.coin.id;
+      this.world[506].type = Tiles.coin.id;
+      this.world[606].type = Tiles.coin.id;
     }
 
     let multiplier = 1;
@@ -465,10 +477,10 @@ class WorldScene extends PIXI.Container {
         this.addNextDialog(d.msg);
         dialogs.shift();
         if (d.msg.nextMsg) {
-          if (d.msg.nextMsg == "third_spread") {
+          if (d.msg.nextMsg == "second_spread") {
             this.game.tick_length = 3;
           }
-          if (d.msg.nextMsg == "fourth_spread") {
+          if (d.msg.nextMsg == "third_spread") {
             this.game.tick_length = 2;
           }
         }
