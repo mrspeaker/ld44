@@ -8,7 +8,7 @@ const Tiles = {
   coin: { sheet: "x1y0" },
   tree: { sheet: "x2y0", yo: -0.3 },
   concrete: { sheet: "x3y0", base: true },
-  skull: { sheet: "x1y1" },
+  skull: { sheet: "x3y1", yo: -0.3 },
   bedrock: { sheet: "x1y2", base: true },
   building: { sheet: "x4y0", base: true }
 };
