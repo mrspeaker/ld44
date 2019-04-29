@@ -28,3 +28,8 @@ body > div {
     border-radius: 10px;
     cursor: none;
 }
+
+a {
+    color: #993300;
+    font-size: 10pt;
+}
