@@ -10,7 +10,7 @@ const Tiles = {
   tree: { sheet: "x2y0", yo: -0.3 },
   concrete: { sheet: "x3y0", base: true },
   skull: { sheet: "x3y1", yo: -0.3 },
-  bedrock: { sheet: "x1y2", base: true },
+  bedrock: { sheet: "x1y2", base: false },
   building: { sheet: "x4y0", base: true }
 };
 
@@ -318,6 +318,12 @@ class WorldScene extends PIXI.Container {
 
     // Rebiuld the tilemap
     this.build(t);
+
+    const percComplete = 1 - trees / this.startTrees;
+    if (percComplete > 50) {
+      Tiles.grass.sheet = "x0y2";
+    }
+
     let multiplier = 1;
     const { prices } = this;
     if (this.$$ > 1000) {
@@ -333,7 +339,7 @@ class WorldScene extends PIXI.Container {
     }
 
     this.dbg.text =
-      ((1 - trees / this.startTrees) * 100).toFixed(0) +
+      (percComplete * 100).toFixed(0) +
       "% " +
       this.game.tick_length.toFixed(5) +
       "-" +

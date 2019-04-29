@@ -21,14 +21,19 @@ hmm, could get something in for the jam!
 TODO:
 
 - make it take almost exactly 3 minutes.
-- use tree% to dictate speed / $$$
-- $ font gets bigger over time, pulses?
-- would be cool to force you to cut down last tree.
-- music starts jolly/ditty... goes darker and horrible
-- add/tweak text comments
+- use tree% + time to dictate speed / $$$
+- if first spread doesn't come after $4, add two coins!
+- if last tree kill was > X seconds, add two coins somewhere
+- teach camera pan/zoom?
 - "Game over" congratulations.
 - focus screen on first spread (in case moved)
-- teach camera pan/zoom?
+
+- add/tweak text comments
+- would be cool to force you to cut down last tree.
+- music starts jolly/ditty... goes darker and horrible
+- grass tile goes brown over game
+- $ font gets bigger over time, pulses?
+
 
 ## Pre LD notes
 OOOh, it's happening again. Not sure where this will go, but probably I'll be using:
