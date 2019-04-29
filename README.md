@@ -23,9 +23,10 @@ TODO:
 - make it take almost exactly 3 minutes.
 - use tree% + time to dictate speed / $$$
 - add/tweak text comments
+- move comments to center, disappear after x seconds.
+- show "building" comment after first building (don't worry about concrete)
 - if first spread doesn't come after $4, add two coins!
 - if last tree kill was > X seconds, add two coins somewhere
-- "Game over" congratulations.
 - focus screen on first spread (in case moved)
 
 - would be cool to force you to cut down last tree.

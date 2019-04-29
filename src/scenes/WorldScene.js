@@ -138,6 +138,21 @@ class WorldScene extends PIXI.Container {
     this.dbg.x = 10;
     this.dbg.y = 60;
     ui.addChild(this.dbg);
+    this.dbg.visible = false;
+
+    this.gameOver = new PIXI.Container();
+    const m1 = new PIXI.Text("You died with:", style);
+    const m2 = new PIXI.Text("Game over.", style);
+    this.gameOver.addChild(m1);
+    this.gameOver.addChild(m2);
+    m1.anchor.set(0.5);
+    m2.anchor.set(0.5);
+    m1.x = 500;
+    m1.y = 230;
+    m2.x = 500;
+    m2.y = 370;
+    ui.addChild(this.gameOver);
+    this.gameOver.visible = false;
   }
 
   addNextDialog(flag) {
@@ -326,6 +341,9 @@ class WorldScene extends PIXI.Container {
     if (percComplete > 0.75) {
       Tiles.grass.sheet = "x0y3";
       Tiles.tree.sheet = "x2y1";
+    }
+    if (trees == 0) {
+      this.gameOver.visible = true;
     }
 
     let multiplier = 1;
