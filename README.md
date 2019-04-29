@@ -12,10 +12,6 @@ The rest up to the gods.
 - https://pixijs.io/examples/
 - http://www.html5gamedevs.com/forum/15-pixijs/
 
-## Todo before start
+## POST MORTEM
 
-- fullscreen/resize
-- animated sprite test
-- solution for tilemaps
-- tile/entity click handler
-- add A*
+Nope, didn't make it! Started something, but didn't go all in. To "play"... click on a tree, it will chop down and you get a coin. Click on another tree that is close to the other coin... it will start a cellular automata that takes over, and you have nothing else to do.

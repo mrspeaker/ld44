@@ -1,5 +1,6 @@
 import Camera from "./Camera.js";
 import WorldScene from "./scenes/WorldScene.js";
+import LogoScene from "./scenes/LogoScene.js";
 
 class Game {
   constructor(app) {
@@ -13,7 +14,9 @@ class Game {
       this.onMoved.bind(this)
     );
     this.ui = new PIXI.Container();
-    this.scene = new WorldScene({}, this.ui, this);
+    this.scene = new LogoScene(() => {
+      this.scene = new WorldScene({}, this.ui, this);
+    });
     this.update = this.update.bind(this);
   }
   set scene(scene) {

@@ -266,14 +266,14 @@ class WorldScene extends PIXI.Container {
 
         if (tile.hide) continue;
 
+        // Add grass everywhere: TODO: this should be a PIXI.TilingSprite over whole field?
         if (!t.base) {
           tilemap.addFrame(Tiles.grass.sheet, j * size, i * size);
         }
+
+        // Add top layer
         const yo = (t.yo || 0) * size;
         tilemap.addFrame(tile.frame || t.sheet, j * size, i * size + yo);
-        if (tile.type === Tiles.building.id) {
-          j++;
-        }
       }
   }
 
