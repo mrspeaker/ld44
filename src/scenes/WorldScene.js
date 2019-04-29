@@ -314,6 +314,7 @@ class WorldScene extends PIXI.Container {
         a.tile.type = Tiles.coin.id;
         actions.shift();
         this.axe.visible = false;
+        this.build();
       }
     }
 
