@@ -2,7 +2,7 @@
 
 [Test it out](https://mrspeaker.github.io/ld44/)
 
-![Sprite sheet](https://raw.githubusercontent.com/mrspeaker/ld44/master/res/sprites.png)
+[![ld44](https://user-images.githubusercontent.com/129330/56872847-67c23780-69fb-11e9-86d9-f36b6196b291.png)](https://mrspeaker.github.io/ld44/)
 
 ## POST MORTEM
 
@@ -11,6 +11,8 @@ Nope, didn't make it! Started something, but didn't go all in. To "play"... clic
 [Cellular Automata thingo](https://mrspeaker.github.io/ld44/)
 
 The code is a crazy bunch of crazy... but will be fun to refactor!
+
+![Sprite sheet](https://raw.githubusercontent.com/mrspeaker/ld44/master/res/sprites.png)
 
 ## Pre LD notes
 OOOh, it's happening again. Not sure where this will go, but probably I'll be using:
