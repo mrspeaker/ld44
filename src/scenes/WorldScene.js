@@ -2,160 +2,61 @@ import PIXI from "../../lib/pixi.js";
 import Dialog from "../entities/Dialog.js";
 import OneUp from "../entities/OneUp.js";
 
+import flags from "../flags.js";
+import { Tiles, TilesById } from "../tiles.js";
+import worldGen from "../worldGen.js";
+
 const { resources } = PIXI.loader;
-
-const Tiles = {
-  grass: { sheet: "x0y0", base: true },
-  coin: { sheet: "x1y0" },
-  tree: { sheet: "x2y0", yo: -0.3 },
-  concrete: { sheet: "x3y0", base: true },
-  skull: { sheet: "x3y1", yo: -0.3 },
-  bedrock: { sheet: "x1y2", base: false },
-  building: { sheet: "x4y0", base: true }
-};
-
-const TilesById = Object.entries(Tiles).reduce((ac, [k, v], i) => {
-  v.id = i;
-  ac[v.id] = v;
-  ac[v.id].name = k;
-  return ac;
-}, {});
 
 class WorldScene extends PIXI.Container {
   constructor(bounds, ui, game) {
     super();
 
+    this.game = game; // TODO: remove refs to game from this class
+
+    this.size = 32; // tile size
+    this.tx = 100; // map width
+    this.ty = 100; // map height
+
     this.startTrees = 2950;
-    this.size = 32;
-    this.tx = 100;
-    this.ty = 100;
-    this.game = game; // TODO: this is just to increase tick speed - move tick speed in here!
+    this.world = worldGen(this.tx, this.ty, this.startTrees);
 
-    this.world = [...Array(this.tx * this.ty)].map((_, i) => {
-      const x = i % this.tx;
-      const y = (i / this.tx) | 0;
-      let type = Tiles.grass.id;
-      //  if (Math.random() < 0.3) type = Tiles.tree.id;
-      if (y == 0 || x == 0 || x == this.tx - 1 || y == this.ty - 1) {
-        type = Tiles.bedrock.id;
-      }
-      return {
-        type
-      };
-    });
-
-    // Add in the trees
-    let trees = this.startTrees;
-    while (trees > 0) {
-      const ti = (Math.random() * this.world.length) | 0;
-      if (this.world[ti].type == Tiles.grass.id) {
-        this.world[ti].type = Tiles.tree.id;
-        trees--;
-      }
-    }
-    this.tilemap = new PIXI.tilemap.CompositeRectTileLayer(
-      0,
-      [resources.sprites_image.texture],
-      true
+    this.tilemap = this.addChild(
+      new PIXI.tilemap.CompositeRectTileLayer(
+        0,
+        [resources.sprites_image.texture],
+        true
+      )
     );
-    this.addChild(this.tilemap);
     this.build();
 
-    this.entities = new PIXI.Container();
-    this.addChild(this.entities);
+    this.entities = this.addChild(new PIXI.Container());
+    this.cursor = this.addChild(
+      new PIXI.Sprite(resources.sprites.textures.x0y1)
+    );
 
-    this.cursor = new PIXI.Sprite(resources.sprites.textures.x0y1);
-    this.addChild(this.cursor);
-
-    this.axe = new PIXI.Sprite(resources.sprites.textures.x2y2);
+    this.axe = this.addChild(new PIXI.Sprite(resources.sprites.textures.x2y2));
     this.axe.pivot.x = this.size * 0.3;
     this.axe.pivot.y = this.size * 0.95;
     this.axe.visible = false;
-    this.addChild(this.axe);
 
-    // TODO: better handling of "actions" - not really used in the end.
-    this.actions = [];
-
-    this.dialog = new Dialog(ui);
+    this.dialogs = [];
+    this.dialog = ui.addChild(new Dialog());
     this.dialog.x = 250;
     this.dialog.y = 480;
     this.dialog.show("Chop some wood to start earning $$$!");
+
+    // TODO: better handling of "actions" - not really used (just to "chop").
+    this.actions = [];
+
     // TODO: fire events for dialog, remove from here
-    this.flags = {
-      first_chop: { done: false, msg: "" },
-      first_chop_done: {
-        done: false,
-        msg: "Phew, it's hard work - but it's a living!"
-      },
-      second_chop: { done: false, msg: "It takes money to make money." },
-      init_spread: {
-        done: false,
-        msg: "Hey! Your wealth is beginning to spread!",
-        nextMsg: "second_spread",
-        after: 6000
-      },
-      second_spread: {
-        done: false,
-        msg: "You've earned some upgrades!",
-        nextMsg: "third_spread",
-        after: 5000
-      },
-      third_spread: { done: false, msg: "" },
-      blank: { done: false, msg: "" },
-      building1: { done: false, msg: "", nextMsg: "building", after: 1 },
-      building: {
-        done: false,
-        msg: "Big money in real estate... good for you.",
-        nextMsg: "blank",
-        after: 5000
-      }
-    };
+    this.flags = flags;
 
-    this.dialogs = [];
-
-    const style = new PIXI.TextStyle({
-      fontFamily: "monospace",
-      fontSize: 40,
-      fill: "#ffffff",
-      stroke: "#222222",
-      strokeThickness: 5
-    });
     this.prices = { coin: 1, concrete: 13, building: 87 };
-
     this.$$ = 0;
-    this.$ = new PIXI.Text(`$${this.$$}`, style);
-    this.$.anchor.set(0.5);
-    this.$.x = 500;
-    this.$.y = 300;
-    this.$.visible = false;
-    ui.addChild(this.$);
-
-    this.dbg = new PIXI.Text(
-      "dbg",
-      new PIXI.TextStyle({
-        fontFamily: "monospace",
-        fontSize: 8,
-        fill: "#ffffff"
-      })
-    );
-    this.dbg.x = 10;
-    this.dbg.y = 60;
-    ui.addChild(this.dbg);
-    this.dbg.visible = false;
-
-    this.gameOver = new PIXI.Container();
-    const m1 = new PIXI.Text("You died with:", style);
-    const m2 = new PIXI.Text("Game over.", style);
-    this.gameOver.addChild(m1);
-    this.gameOver.addChild(m2);
-    m1.anchor.set(0.5);
-    m2.anchor.set(0.5);
-    m1.x = 500;
-    m1.y = 230;
-    m2.x = 500;
-    m2.y = 370;
-    ui.addChild(this.gameOver);
-    this.gameOver.visible = false;
+    this.$ = ui.addChild(this.addScoreUI());
+    this.gameOver = ui.addChild(this.addGameOverUI());
+    this.dbg = ui.addChild(this.addDebugUI(false));
   }
 
   addNextDialog(flag) {
@@ -166,6 +67,62 @@ class WorldScene extends PIXI.Container {
         time: Date.now() + flag.after
       });
     }
+  }
+
+  addScoreUI() {
+    const style = new PIXI.TextStyle({
+      fontFamily: "monospace",
+      fontSize: 40,
+      fill: "#ffffff",
+      stroke: "#222222",
+      strokeThickness: 5
+    });
+    const $ = new PIXI.Text("", style);
+
+    $.anchor.set(0.5);
+    $.x = 500;
+    $.y = 300;
+    $.visible = false;
+    return $;
+  }
+
+  addDebugUI(show = true) {
+    const dbg = new PIXI.Text(
+      "dbg",
+      new PIXI.TextStyle({
+        fontFamily: "monospace",
+        fontSize: 8,
+        fill: "#ffffff"
+      })
+    );
+
+    dbg.x = 10;
+    dbg.y = 60;
+    dbg.visible = show;
+    return dbg;
+  }
+
+  addGameOverUI() {
+    const style = new PIXI.TextStyle({
+      fontFamily: "monospace",
+      fontSize: 40,
+      fill: "#ffffff",
+      stroke: "#222222",
+      strokeThickness: 5
+    });
+    const go = new PIXI.Container();
+    const m1 = new PIXI.Text("You died with:", style);
+    const m2 = new PIXI.Text("Game over.", style);
+    go.addChild(m1);
+    go.addChild(m2);
+    m1.anchor.set(0.5);
+    m2.anchor.set(0.5);
+    m1.x = 500;
+    m1.y = 230;
+    m2.x = 500;
+    m2.y = 370;
+    go.visible = false;
+    return go;
   }
 
   add$($$, x, y) {
@@ -214,7 +171,6 @@ class WorldScene extends PIXI.Container {
   startChop(t, x, y) {
     const { actions } = this;
     if (actions.length) {
-      //      console.log("bzzz... already chopping");
       //one at a time!
       return;
     }
@@ -250,10 +206,11 @@ class WorldScene extends PIXI.Container {
   }
 
   tick(t) {
-    const ns = [];
     const added = [];
     let trees = 0;
     let addedABuilding = false;
+
+    const ns = []; // tmp array for neighbours
     this.world.forEach((t, i) => {
       if (t.type === Tiles.skull.id) {
         if (Math.random() < 0.05) {
@@ -262,12 +219,14 @@ class WorldScene extends PIXI.Container {
         return;
       }
       if (t.type === Tiles.tree.id) trees++;
-      if (t.hide || t.type == Tiles.building.id) return;
+      if (t.hide || TilesById[t.type].noRule) {
+        return;
+      }
 
       this.getNeighbours(i, ns);
-      // TODO: clean up count
       const n = ns.reduce(
         (ac, el) => {
+          // TODO: clean up counts
           if (!el || el.type === Tiles.bedrock.id) {
             ac.concrete++;
             return ac;
@@ -284,59 +243,74 @@ class WorldScene extends PIXI.Container {
 
       const crapThings = n.coins + n.concrete + n.buildings;
 
-      if (t.type === Tiles.grass.id) {
-        if (n.coins >= 2 || crapThings > 7) {
-          added.push([i, Tiles.coin]);
-          this.add$(this.prices.coin);
+      // Cellular automata rules
+      switch (t.type) {
+        case Tiles.grass.id:
+          if (n.coins >= 2 || crapThings > 7) {
+            added.push([i, Tiles.coin]);
+            this.add$(this.prices.coin);
 
-          // TODO: remove flags - make events
-          const { flags } = this;
-          if (!flags.init_spread.done) {
-            flags.init_spread.done = true;
-            flags.init_spread.time = Date.now();
-            this.dialog.show(flags.init_spread.msg);
-            this.addNextDialog(flags.init_spread);
+            // TODO: remove flags - make events
+            const { flags } = this;
+            if (!flags.init_spread.done) {
+              flags.init_spread.done = true;
+              flags.init_spread.time = Date.now();
+              this.dialog.show(flags.init_spread.msg);
+              this.addNextDialog(flags.init_spread);
+            }
           }
-        }
-      } else if (t.type === Tiles.tree.id) {
-        if (n.coins > 0 && n.blanks === 0) {
-          // Starved, so die
-          added.push([i, Tiles.skull]);
-        }
-      } else if (t.type === Tiles.coin.id) {
-        if (crapThings >= 8) {
-          this.add$(this.prices.concrete, i);
-          added.push([i, Tiles.concrete]);
-        }
-        if (n.trees > 0) {
-          // "Magic flip" to kill some trees randomly - stops pockets of green!
-          if (Math.random() < 0.005) {
-            ns.find(n => n && n.type === Tiles.tree.id).type = Tiles.skull.id;
+          break;
+        case Tiles.tree.id:
+          if (n.coins > 0 && n.blanks === 0) {
+            // Starved, so die
+            added.push([i, Tiles.skull]);
           }
-        }
-      } else if (n.concrete > 3 && t.type === Tiles.concrete.id && !t.hide) {
-        const c = Tiles.concrete.id;
-        const sq = [5, 7, 8];
-        if (
-          sq.every(ni => {
-            const n = ns[ni];
-            return n && n.type == c && !n.hide;
-          })
-        ) {
-          t.type = Tiles.building.id;
-          t.frame = Math.random() < 0.7 ? Tiles.building.sheet : "x5y0";
-          sq.forEach(ni => (ns[ni].hide = true));
-          this.add$(this.prices.building, i);
-          addedABuilding = true;
-        }
+          break;
+        case Tiles.coin.id:
+          if (crapThings >= 8) {
+            this.add$(this.prices.concrete, i);
+            added.push([i, Tiles.concrete]);
+          }
+          if (n.trees > 0) {
+            // "Magic flip" to kill some trees randomly - stops pockets of green!
+            if (Math.random() < 0.005) {
+              ns.find(n => n && n.type === Tiles.tree.id).type = Tiles.skull.id;
+            }
+          }
+          break;
+        case Tiles.concrete.id:
+          // TODO: is ever t.hide? (returns above right?)
+          if (t.hide) console.log("is hide...");
+          if (n.concrete > 3 && !t.hide) {
+            const c = Tiles.concrete.id;
+            const sq = [5, 7, 8];
+            if (
+              sq.every(ni => {
+                const n = ns[ni];
+                return n && n.type == c && !n.hide;
+              })
+            ) {
+              t.type = Tiles.building.id;
+              t.frame = Math.random() < 0.7 ? Tiles.building.sheet : "x5y0";
+              sq.forEach(ni => (ns[ni].hide = true));
+              this.add$(this.prices.building, i);
+              addedABuilding = true;
+            }
+          }
+          break;
+        default:
+          console.warn("other", t.type);
+          return;
       }
     });
-    // Make changes after initial pass over tiles
+
+    // Make changes AFTER initial pass over tiles
     added.forEach(([i, type]) => {
       const tile = this.world[i];
       tile.type = type.id;
     });
 
+    // Kick drum heartbeat
     if (addedABuilding) {
       resources.kick.sound.play();
       if (!this.flags.building1.done) {
@@ -345,9 +319,10 @@ class WorldScene extends PIXI.Container {
       }
     }
 
-    // Rebiuld the tilemap
+    // Rebuild the tilemap
     this.build(t);
 
+    // Game score/pacing logic
     const percComplete = 1 - trees / this.startTrees;
     if (percComplete > 0.5) {
       Tiles.grass.sheet = "x0y2";
@@ -359,11 +334,12 @@ class WorldScene extends PIXI.Container {
     if (trees == 0) {
       this.gameOver.visible = true;
       this.game.gameover = true;
-      this.game.drone.volume = 0.1; //.stop();
+      this.game.drone.volume = 0.1;
     }
 
-    // Emergency coins if you hadnt placed any next to each other!
+    // Helper coins if you didn't place any next to each other!
     if (this.$$ > 4 && !this.flags.init_spread.done) {
+      // Force a spread
       this.world[505].type = Tiles.coin.id;
       this.world[506].type = Tiles.coin.id;
       this.world[606].type = Tiles.coin.id;
@@ -404,7 +380,8 @@ class WorldScene extends PIXI.Container {
 
         if (tile.hide) continue;
 
-        // Add grass everywhere: TODO: this should be a PIXI.TilingSprite over whole field?
+        // Add grass everywhere
+        // TODO: this should be a PIXI.TilingSprite over whole field
         if (!t.base) {
           tilemap.addFrame(Tiles.grass.sheet, j * size, i * size);
         }
@@ -427,6 +404,7 @@ class WorldScene extends PIXI.Container {
       return;
     }
 
+    // Update one-ups
     entities.children.forEach(e => e.update(t));
 
     // TODO: This is dumb - just for tree click (only 1 "action"!)
@@ -443,7 +421,7 @@ class WorldScene extends PIXI.Container {
         }
         this.axe.visible = true;
         a.doneAt = Date.now() + a.chopTime;
-        // Only do weird chop sounds before 100000
+        // Only do chop sounds before 100000 - distracts from "heartbeat" effect
         if (this.$$ < 10000) {
           (function chopSFX() {
             function play(times) {
@@ -458,6 +436,7 @@ class WorldScene extends PIXI.Container {
         this.axe.y = a.y * size;
         a.started = true;
       }
+
       if (Date.now() > a.doneAt) {
         if (!flags.first_chop_done.done) {
           this.dialog.show(flags.first_chop_done.msg);

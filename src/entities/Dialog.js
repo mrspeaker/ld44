@@ -3,7 +3,7 @@ import PIXI from "../../lib/pixi.js";
 const { resources } = PIXI.loader;
 
 class Dialog extends PIXI.Container {
-  constructor(ui) {
+  constructor() {
     super();
     const g = new PIXI.Graphics();
     // draw a rounded rectangle
@@ -29,7 +29,6 @@ class Dialog extends PIXI.Container {
     this.addChild(text);
     this.text = text;
 
-    ui.addChild(this);
     this.visible = false;
   }
   show(text) {

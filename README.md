@@ -1,6 +1,6 @@
-# LD44: Your life is currency
+# LD44: Takes money
 
-[Test it out](https://mrspeaker.github.io/ld44/)
+My entry for the Ludum Dare #44 game jame on the theme "Your life is currency". Not really a game, but you can [PLAY NOW](https://mrspeaker.github.io/ld44/)!
 
 [![ld44](https://user-images.githubusercontent.com/129330/56872847-67c23780-69fb-11e9-86d9-f36b6196b291.png)](https://mrspeaker.github.io/ld44/)
 
@@ -16,21 +16,11 @@ The code is a crazy bunch of crazy... but will be fun to refactor!
 
 ## Jam notes
 
-hmm, could get something in for the jam!
+hmm, could get something in for the jam! [Edit: yep, got something in - [Ludum Dare jam entry](https://ldjam.com/events/ludum-dare/44/takes-money)
 
 TODO:
 
-- Comment dialog
--- add/tweak text comments
--- show "building" comment after first building (don't worry about concrete)
-
-- make sure "get" CA at start
--- if first spread doesn't come after $4, add two coins!
--- focus screen on first spread (in case moved)
--- if last tree kill was > X seconds, add two coins somewhere (so not stuck)
-
-- Audio
--- sfx for... building? $1000? (while you still think it's good).a million bucks?
+[DONE]
 
 Low Priority:
 - pacing: use tree% + time to dictate speed / $$$
@@ -44,6 +34,8 @@ Low Priority:
 - make the world repeateable - no edge.
 -- $ font gets bigger over time, pulses?
 -- music starts jolly/ditty... goes darker and horrible
+
+- move tick logic out of Game and into WorldScene. Move tilemap out of WorldScene and into it's own class.
 
 ## Pre LD notes
 OOOh, it's happening again. Not sure where this will go, but probably I'll be using:
