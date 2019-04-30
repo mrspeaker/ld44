@@ -96,7 +96,7 @@ class WorldScene extends PIXI.Container {
       },
       second_spread: {
         done: false,
-        msg: "You can afford some upgrades!",
+        msg: "You've earned some upgrades!",
         nextMsg: "third_spread",
         after: 5000
       },
