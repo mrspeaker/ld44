@@ -214,7 +214,7 @@ class WorldScene extends PIXI.Container {
   startChop(t, x, y) {
     const { actions } = this;
     if (actions.length) {
-      console.log("bzzz... already chopping");
+      //      console.log("bzzz... already chopping");
       //one at a time!
       return;
     }
@@ -359,6 +359,7 @@ class WorldScene extends PIXI.Container {
     if (trees == 0) {
       this.gameOver.visible = true;
       this.game.gameover = true;
+      this.game.drone.volume = 0.1; //.stop();
     }
 
     // Emergency coins if you hadnt placed any next to each other!

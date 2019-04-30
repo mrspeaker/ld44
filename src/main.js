@@ -35,6 +35,7 @@ document.addEventListener("contextmenu", e => e.preventDefault());
 PIXI.loader
   .add("sprites", "res/sprites.json")
   .add("chop", "res/audio/chop.mp3")
+  .add("drone", "res/audio/drone.mp3")
   .add("logosfx", "res/audio/logo.mp3")
   .add("mouse", "res/audio/mouse.mp3")
   .add("dialogbeep", "res/audio/dialogbeep.mp3")

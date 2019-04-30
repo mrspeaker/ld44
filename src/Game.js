@@ -48,6 +48,12 @@ class Game {
         //x        this.scene.dgb.text = this.tick_length;
         if (!this.gameover && this.tick > 40 && this.tick % mod == 0) {
           PIXI.loader.resources.pling.sound.play();
+          if (!this.drone) {
+            const drone = PIXI.loader.resources.drone.sound;
+            drone.volume = 0.2;
+            drone.play({ loop: true });
+            this.drone = drone;
+          }
         }
       }
     }
