@@ -117,7 +117,7 @@ class WorldScene extends PIXI.Container {
       fontFamily: "monospace",
       fontSize: 40,
       fill: "#ffffff",
-      stroke: "#4a1850",
+      stroke: "#222222",
       strokeThickness: 5
     });
     this.prices = { coin: 1, concrete: 13, building: 87 };
@@ -442,13 +442,16 @@ class WorldScene extends PIXI.Container {
         }
         this.axe.visible = true;
         a.doneAt = Date.now() + a.chopTime;
-        (function chopSFX() {
-          function play(times) {
-            resources.chop.sound.play();
-            if (times-- > 0) setTimeout(() => play(times), 700);
-          }
-          play(6);
-        })();
+        // Only do weird chop sounds before 100000
+        if (this.$$ < 10000) {
+          (function chopSFX() {
+            function play(times) {
+              resources.chop.sound.play();
+              if (times-- > 0) setTimeout(() => play(times), 700);
+            }
+            play(6);
+          })();
+        }
 
         this.axe.x = a.x * size - 10;
         this.axe.y = a.y * size;
