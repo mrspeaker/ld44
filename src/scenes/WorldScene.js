@@ -279,9 +279,8 @@ class WorldScene extends PIXI.Container {
           }
           break;
         case Tiles.concrete.id:
-          // TODO: is ever t.hide? (returns above right?)
-          if (t.hide) console.log("is hide...");
-          if (n.concrete > 3 && !t.hide) {
+          if (n.concrete > 3) {
+            // Check if 4 tiles are concrete: convert to building
             const c = Tiles.concrete.id;
             const sq = [5, 7, 8];
             if (
@@ -291,7 +290,10 @@ class WorldScene extends PIXI.Container {
               })
             ) {
               t.type = Tiles.building.id;
-              t.frame = Math.random() < 0.7 ? Tiles.building.sheet : "x5y0";
+              t.frame =
+                Math.random() < 0.7
+                  ? Tiles.building.sheet
+                  : Tiles.building.sheetAlt;
               sq.forEach(ni => (ns[ni].hide = true));
               this.add$(this.prices.building, i);
               addedABuilding = true;
