@@ -13,15 +13,15 @@ const container = document.querySelector("#container");
 container.appendChild(app.view);
 
 function toggleFullScreen() {
-  if (!document.mozFullScreen && !document.webkitFullScreen) {
-    if (container.mozRequestFullScreen) {
-      container.mozRequestFullScreen();
+  if (!document.fullscreen && !document.webkitFullScreen) {
+    if (container.requestFullscreen) {
+      container.requestFullscreen();
     } else {
       container.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
     }
   } else {
-    if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
+    if (document.cancelFullscreen) {
+      document.cancelFullscreen();
     } else {
       document.webkitCancelFullScreen();
     }
