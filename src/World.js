@@ -157,12 +157,13 @@ class World {
     };
   }
 
-  spawnCoinsAtIdx(idx) {
-    const { cells } = this;
+  spawnCoinsAtCell(x, y) {
+    const { cells, tx } = this;
     // Force a spread
-    cells[505].type = Tiles.coin.id;
-    cells[506].type = Tiles.coin.id;
-    cells[606].type = Tiles.coin.id;
+    const idx = this.getIdxAtXY(x * size, y * size);
+    cells[idx].type = Tiles.coin.id;
+    cells[idx + 1].type = Tiles.coin.id;
+    cells[idx + tx].type = Tiles.coin.id;
   }
 
   getCellAtXY(x, y) {

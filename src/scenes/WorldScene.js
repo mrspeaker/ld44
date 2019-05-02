@@ -226,7 +226,7 @@ class WorldScene extends PIXI.Container {
 
     // Helper coins if you didn't place any next to each other!
     if (this.$$ > 4 && !flags.init_spread.done) {
-      world.spawnCoinsAtIdx(505);
+      world.spawnCoinsAtCell(8, 8);
     }
 
     // Update $ earned per item
