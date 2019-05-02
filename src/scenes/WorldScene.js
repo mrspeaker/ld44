@@ -1,11 +1,11 @@
 import PIXI from "../../lib/pixi.js";
+import World from "../World.js";
 import Dialog from "../entities/Dialog.js";
 import OneUp from "../entities/OneUp.js";
 import Axe from "../entities/Axe.js";
 import flags from "../flags.js";
 
 import { Tiles, TilesById, size } from "../tiles.js";
-import worldGen from "../worldGen.js";
 
 const { resources } = PIXI.loader;
 
@@ -15,20 +15,10 @@ class WorldScene extends PIXI.Container {
 
     this.game = game; // TODO: remove refs to game from this class
 
-    this.tx = 100; // map width
-    this.ty = 100; // map height
-
     this.startTrees = 2950;
-    this.world = worldGen(this.tx, this.ty, this.startTrees);
-
-    this.tilemap = this.addChild(
-      new PIXI.tilemap.CompositeRectTileLayer(
-        0,
-        [resources.sprites_image.texture],
-        true
-      )
-    );
-    this.build();
+    // TODO: finish moving world into World
+    this.world = new World(100, 100, this.startTrees);
+    this.addChild(this.world.tilemap);
 
     this.entities = this.addChild(new PIXI.Container());
     this.cursor = this.addChild(
@@ -132,7 +122,7 @@ class WorldScene extends PIXI.Container {
     if (y) {
       this.entities.addChild(new OneUp(x, y, $$));
     } else if (x) {
-      const { tx, ty } = this;
+      const { tx, ty } = this.world;
       const xx = x % tx;
       const yy = (x / ty) | 0;
       this.entities.addChild(new OneUp(xx * size + 16, yy * size, $$));
@@ -140,13 +130,14 @@ class WorldScene extends PIXI.Container {
   }
 
   onClicked(x, y, isShift) {
+    // TODO: mkae world.getTileAtXY
     const xo = (x / size) | 0;
     const yo = (y / size) | 0;
-    const i = yo * this.tx + xo;
-    const t = this.world[i];
+    const i = yo * this.world.tx + xo;
+    const t = this.world.world[i];
 
     if (isShift) {
-      const ns = this.getNeighbours(i, []);
+      const ns = this.world.getNeighbours(i, []);
       console.log(ns);
       return;
     }
@@ -182,33 +173,13 @@ class WorldScene extends PIXI.Container {
     });
   }
 
-  getNeighbours(idx, ns) {
-    ns.length = 0;
-    const { tx, ty, world } = this;
-    const x = idx % tx;
-    const y = (idx / tx) | 0;
-
-    for (let j = -1; j < 2; j++) {
-      for (let i = -1; i < 2; i++) {
-        if (x + i < 0 || x + i > tx - 1 || y + j < 0 || y + j > ty - 1) {
-          ns.push(null);
-        } else if (j == 0 && i == 0) {
-          ns.push(null);
-        } else {
-          ns.push(world[(y + j) * tx + (x + i)]);
-        }
-      }
-    }
-    return ns;
-  }
-
   tick(t) {
     const added = [];
     let trees = 0;
     let addedABuilding = false;
 
     const ns = []; // tmp array for neighbours
-    this.world.forEach((t, i) => {
+    this.world.world.forEach((t, i) => {
       if (t.type === Tiles.skull.id) {
         if (Math.random() < 0.05) {
           t.type = Tiles.grass.id;
@@ -220,7 +191,7 @@ class WorldScene extends PIXI.Container {
         return;
       }
 
-      this.getNeighbours(i, ns);
+      this.world.getNeighbours(i, ns);
       const n = ns.reduce(
         (ac, el) => {
           // TODO: clean up counts
@@ -305,7 +276,7 @@ class WorldScene extends PIXI.Container {
 
     // Make changes AFTER initial pass over tiles
     added.forEach(([i, type]) => {
-      const tile = this.world[i];
+      const tile = this.world.world[i];
       tile.type = type.id;
     });
 
@@ -319,7 +290,7 @@ class WorldScene extends PIXI.Container {
     }
 
     // Rebuild the tilemap
-    this.build(t);
+    this.world.build(t);
 
     // Game score/pacing logic
     const percComplete = 1 - trees / this.startTrees;
@@ -338,10 +309,7 @@ class WorldScene extends PIXI.Container {
 
     // Helper coins if you didn't place any next to each other!
     if (this.$$ > 4 && !this.flags.init_spread.done) {
-      // Force a spread
-      this.world[505].type = Tiles.coin.id;
-      this.world[506].type = Tiles.coin.id;
-      this.world[606].type = Tiles.coin.id;
+      this.world.spawnCoinsAtIdx(505);
     }
 
     let multiplier = 1;
@@ -366,29 +334,6 @@ class WorldScene extends PIXI.Container {
       prices.building +
       " - " +
       multiplier.toFixed(3);
-  }
-
-  build() {
-    const { tilemap, tx, ty, world } = this;
-    tilemap.clear();
-
-    for (var i = 0; i < ty; i++)
-      for (var j = 0; j < tx; j++) {
-        const tile = world[i * tx + j];
-        const t = TilesById[tile.type];
-
-        if (tile.hide) continue;
-
-        // Add grass everywhere
-        // TODO: this should be a PIXI.TilingSprite over whole field
-        if (!t.base) {
-          tilemap.addFrame(Tiles.grass.sheet, j * size, i * size);
-        }
-
-        // Add top layer
-        const yo = (t.yo || 0) * size;
-        tilemap.addFrame(tile.frame || t.sheet, j * size, i * size + yo);
-      }
   }
 
   update(t) {
@@ -446,7 +391,7 @@ class WorldScene extends PIXI.Container {
         this.add$(this.prices.coin, a.x * size + 16, a.y * size);
         actions.shift();
         this.axe.visible = false;
-        this.build();
+        this.world.build();
       }
     }
 
