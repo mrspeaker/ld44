@@ -1,9 +1,10 @@
 import PIXI from "../../lib/pixi.js";
 import Dialog from "../entities/Dialog.js";
 import OneUp from "../entities/OneUp.js";
-
+import Axe from "../entities/Axe.js";
 import flags from "../flags.js";
-import { Tiles, TilesById } from "../tiles.js";
+
+import { Tiles, TilesById, size } from "../tiles.js";
 import worldGen from "../worldGen.js";
 
 const { resources } = PIXI.loader;
@@ -14,7 +15,6 @@ class WorldScene extends PIXI.Container {
 
     this.game = game; // TODO: remove refs to game from this class
 
-    this.size = 32; // tile size
     this.tx = 100; // map width
     this.ty = 100; // map height
 
@@ -35,9 +35,7 @@ class WorldScene extends PIXI.Container {
       new PIXI.Sprite(resources.sprites.textures.x0y1)
     );
 
-    this.axe = this.addChild(new PIXI.Sprite(resources.sprites.textures.x2y2));
-    this.axe.pivot.x = this.size * 0.3;
-    this.axe.pivot.y = this.size * 0.95;
+    this.axe = this.addChild(new Axe());
     this.axe.visible = false;
 
     this.dialogs = [];
@@ -134,7 +132,7 @@ class WorldScene extends PIXI.Container {
     if (y) {
       this.entities.addChild(new OneUp(x, y, $$));
     } else if (x) {
-      const { tx, ty, size } = this;
+      const { tx, ty } = this;
       const xx = x % tx;
       const yy = (x / ty) | 0;
       this.entities.addChild(new OneUp(xx * size + 16, yy * size, $$));
@@ -142,7 +140,6 @@ class WorldScene extends PIXI.Container {
   }
 
   onClicked(x, y, isShift) {
-    const { size } = this;
     const xo = (x / size) | 0;
     const yo = (y / size) | 0;
     const i = yo * this.tx + xo;
@@ -161,7 +158,7 @@ class WorldScene extends PIXI.Container {
   }
 
   onMoved(x, y) {
-    const { size, cursor } = this;
+    const { cursor } = this;
     const xo = (x / size) | 0;
     const yo = (y / size) | 0;
     cursor.x = xo * size;
@@ -372,7 +369,7 @@ class WorldScene extends PIXI.Container {
   }
 
   build() {
-    const { tilemap, size, tx, ty, world } = this;
+    const { tilemap, tx, ty, world } = this;
     tilemap.clear();
 
     for (var i = 0; i < ty; i++)
@@ -395,7 +392,7 @@ class WorldScene extends PIXI.Container {
   }
 
   update(t) {
-    const { actions, size, flags, dialogs, entities } = this;
+    const { actions, flags, dialogs, entities } = this;
 
     // Pan on start
     if (t < 4) {

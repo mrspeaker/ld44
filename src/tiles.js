@@ -14,3 +14,5 @@ export const TilesById = Object.entries(Tiles).reduce((ac, [k, v], i) => {
   ac[v.id].name = k;
   return ac;
 }, {});
+
+export const size = 32;
