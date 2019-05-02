@@ -1,49 +1,42 @@
-import PIXI from "../lib/pixi.js";
-import worldGen from "./worldGen.js";
 import { Tiles, TilesById, size } from "./tiles.js";
 
-const { resources } = PIXI.loader;
-
 class World {
-  constructor(tx, ty, startTrees) {
+  constructor(tx, ty, treePerc) {
     this.tx = tx;
     this.ty = ty;
-    this.world = worldGen(tx, ty, startTrees);
-
-    this.tilemap = new PIXI.tilemap.CompositeRectTileLayer(
-      0,
-      [resources.sprites_image.texture],
-      true
-    );
-    this.build();
+    this.startTrees = (tx * tx * treePerc) | 0;
+    this.cells = this.gen(tx, ty, this.startTrees);
   }
 
-  build() {
-    const { tilemap, tx, ty, world } = this;
-    tilemap.clear();
+  gen(tx, ty, trees) {
+    const cells = [...Array(tx * ty)].map((_, i) => {
+      const x = i % tx;
+      const y = (i / tx) | 0;
+      let type = Tiles.grass.id;
 
-    for (var i = 0; i < ty; i++)
-      for (var j = 0; j < tx; j++) {
-        const tile = world[i * tx + j];
-        const t = TilesById[tile.type];
-
-        if (tile.hide) continue;
-
-        // Add grass everywhere
-        // TODO: this should be a PIXI.TilingSprite over whole field
-        if (!t.base) {
-          tilemap.addFrame(Tiles.grass.sheet, j * size, i * size);
-        }
-
-        // Add top layer
-        const yo = (t.yo || 0) * size;
-        tilemap.addFrame(tile.frame || t.sheet, j * size, i * size + yo);
+      if (y == 0 || x == 0 || x == tx - 1 || y == ty - 1) {
+        type = Tiles.bedrock.id;
       }
+      return {
+        type
+      };
+    });
+
+    // Add in the trees
+    while (trees > 0) {
+      const ti = (Math.random() * tx * ty) | 0;
+      if (cells[ti].type == Tiles.grass.id) {
+        cells[ti].type = Tiles.tree.id;
+        trees--;
+      }
+    }
+
+    return cells;
   }
 
   getNeighbours(idx, ns) {
     ns.length = 0;
-    const { tx, ty, world } = this;
+    const { tx, ty, cells } = this;
     const x = idx % tx;
     const y = (idx / tx) | 0;
 
@@ -54,7 +47,7 @@ class World {
         } else if (j == 0 && i == 0) {
           ns.push(null);
         } else {
-          ns.push(world[(y + j) * tx + (x + i)]);
+          ns.push(cells[(y + j) * tx + (x + i)]);
         }
       }
     }
@@ -62,11 +55,29 @@ class World {
   }
 
   spawnCoinsAtIdx(idx) {
-    const { world } = this;
+    const { cells } = this;
     // Force a spread
-    world[505].type = Tiles.coin.id;
-    world[506].type = Tiles.coin.id;
-    world[606].type = Tiles.coin.id;
+    cells[505].type = Tiles.coin.id;
+    cells[506].type = Tiles.coin.id;
+    cells[606].type = Tiles.coin.id;
+  }
+
+  getCellAtXY(x, y) {
+    const { cells } = this;
+    return cells[this.getIdxAtXY(x, y)];
+  }
+
+  getIdxAtXY(x, y) {
+    const { tx } = this;
+    const xo = (x / size) | 0;
+    const yo = (y / size) | 0;
+    return yo * tx + xo;
+  }
+
+  getCellIndices(x, y) {
+    const xo = (x / size) | 0;
+    const yo = (y / size) | 0;
+    return { xo, yo };
   }
 }
 

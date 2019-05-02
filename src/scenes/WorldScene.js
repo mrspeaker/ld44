@@ -1,5 +1,6 @@
 import PIXI from "../../lib/pixi.js";
 import World from "../World.js";
+import WorldTileMap from "../WorldTileMap.js";
 import Dialog from "../entities/Dialog.js";
 import OneUp from "../entities/OneUp.js";
 import Axe from "../entities/Axe.js";
@@ -15,10 +16,9 @@ class WorldScene extends PIXI.Container {
 
     this.game = game; // TODO: remove refs to game from this class
 
-    this.startTrees = 2950;
-    // TODO: finish moving world into World
-    this.world = new World(100, 100, this.startTrees);
-    this.addChild(this.world.tilemap);
+    this.world = new World(100, 100, 0.295);
+    this.tilemap = this.addChild(new WorldTileMap());
+    this.renderTiles();
 
     this.entities = this.addChild(new PIXI.Container());
     this.cursor = this.addChild(
@@ -45,6 +45,11 @@ class WorldScene extends PIXI.Container {
     this.$ = ui.addChild(this.addScoreUI());
     this.gameOver = ui.addChild(this.addGameOverUI());
     this.dbg = ui.addChild(this.addDebugUI(false));
+  }
+
+  renderTiles() {
+    const { tilemap, world } = this;
+    tilemap.build(world);
   }
 
   addNextDialog(flag) {
@@ -114,44 +119,44 @@ class WorldScene extends PIXI.Container {
   }
 
   add$($$, x, y) {
+    const { $, entities, world } = this;
     this.$$ += $$;
-    this.$.visible = true;
-    this.$.text = `$${this.$$.toLocaleString("fullwide")}`;
+    $.visible = true;
+    $.text = `$${this.$$.toLocaleString("fullwide")}`;
 
     // add oneup by x,y or tile idx
     if (y) {
-      this.entities.addChild(new OneUp(x, y, $$));
+      entities.addChild(new OneUp(x, y, $$));
     } else if (x) {
-      const { tx, ty } = this.world;
+      const { tx, ty } = world;
       const xx = x % tx;
       const yy = (x / ty) | 0;
-      this.entities.addChild(new OneUp(xx * size + 16, yy * size, $$));
+      entities.addChild(new OneUp(xx * size + 16, yy * size, $$));
     }
   }
 
   onClicked(x, y, isShift) {
-    // TODO: mkae world.getTileAtXY
-    const xo = (x / size) | 0;
-    const yo = (y / size) | 0;
-    const i = yo * this.world.tx + xo;
-    const t = this.world.world[i];
+    const { world } = this;
+    const tile = world.getCellAtXY(x, y);
 
+    // Debug neighbours
     if (isShift) {
-      const ns = this.world.getNeighbours(i, []);
+      const ns = world.getNeighbours(world.getIdxAtXY(x, y), []);
       console.log(ns);
       return;
     }
-    if (t.type == Tiles.tree.id) {
-      this.startChop(t, xo, yo);
+
+    if (tile.type == Tiles.tree.id) {
+      const { xo, yo } = world.getCellIndices(x, y);
+      this.startChop(tile, xo, yo);
     } else {
       resources.mouse.sound.play();
     }
   }
 
   onMoved(x, y) {
-    const { cursor } = this;
-    const xo = (x / size) | 0;
-    const yo = (y / size) | 0;
+    const { cursor, world, flags } = this;
+    const { xo, yo } = world.getCellIndices(x, y);
     cursor.x = xo * size;
     cursor.y = yo * size;
   }
@@ -174,24 +179,26 @@ class WorldScene extends PIXI.Container {
   }
 
   tick(t) {
-    const added = [];
-    let trees = 0;
-    let addedABuilding = false;
+    const { world } = this;
+    let remainingTrees = 0;
+    let newBuildings = 0;
 
+    const added = []; // New cells, not processed in current tick
     const ns = []; // tmp array for neighbours
-    this.world.world.forEach((t, i) => {
+
+    world.cells.forEach((t, i) => {
       if (t.type === Tiles.skull.id) {
         if (Math.random() < 0.05) {
           t.type = Tiles.grass.id;
         }
         return;
       }
-      if (t.type === Tiles.tree.id) trees++;
+      if (t.type === Tiles.tree.id) remainingTrees++;
       if (t.hide || TilesById[t.type].noRule) {
         return;
       }
 
-      this.world.getNeighbours(i, ns);
+      world.getNeighbours(i, ns);
       const n = ns.reduce(
         (ac, el) => {
           // TODO: clean up counts
@@ -219,7 +226,6 @@ class WorldScene extends PIXI.Container {
             this.add$(this.prices.coin);
 
             // TODO: remove flags - make events
-            const { flags } = this;
             if (!flags.init_spread.done) {
               flags.init_spread.done = true;
               flags.init_spread.time = Date.now();
@@ -264,36 +270,58 @@ class WorldScene extends PIXI.Container {
                   : Tiles.building.sheetAlt;
               sq.forEach(ni => (ns[ni].hide = true));
               this.add$(this.prices.building, i);
-              addedABuilding = true;
+              newBuildings++;
             }
           }
           break;
-        default:
-          console.warn("other", t.type);
-          return;
       }
     });
 
     // Make changes AFTER initial pass over tiles
     added.forEach(([i, type]) => {
-      const tile = this.world.world[i];
+      const tile = world.cells[i];
       tile.type = type.id;
     });
 
+    this.updatePricesAndSpeed(t, remainingTrees, newBuildings);
+    this.renderTiles();
+  }
+
+  updatePricesAndSpeed(t, remainingTrees, newBuildings) {
+    const { prices, world, dbg } = this;
+
     // Kick drum heartbeat
-    if (addedABuilding) {
+    if (newBuildings > 0) {
       resources.kick.sound.play();
-      if (!this.flags.building1.done) {
-        this.flags.building1.done = true;
-        this.addNextDialog(this.flags.building1);
+      // Show "real estate" dialog for first building
+      if (!flags.building1.done) {
+        flags.building1.done = true;
+        this.addNextDialog(flags.building1);
       }
     }
 
-    // Rebuild the tilemap
-    this.world.build(t);
+    // Helper coins if you didn't place any next to each other!
+    if (this.$$ > 4 && !flags.init_spread.done) {
+      world.spawnCoinsAtIdx(505);
+    }
 
-    // Game score/pacing logic
-    const percComplete = 1 - trees / this.startTrees;
+    // Update $ earned per item
+    let multiplier = 1;
+    if (this.$$ > 1000) {
+      multiplier = Math.min(1.1, 1 + t / 1500);
+      prices.concrete = Math.round(prices.concrete * multiplier);
+      prices.building = Math.round(prices.building * multiplier);
+
+      // TODO: ticks should be controlled by this scene.
+      // TODO: don't increase until after spreading (or when not spreading)
+      if (this.game.tick_length <= 2) {
+        const speed = this.game.tick_length > 1 ? 0.08 : 0.005;
+        this.game.tick_length = Math.max(0.1, this.game.tick_length - speed);
+      }
+    }
+
+    // Game progress logic
+    const percComplete = 1 - remainingTrees / world.startTrees;
     if (percComplete > 0.5) {
       Tiles.grass.sheet = "x0y2";
     }
@@ -301,39 +329,21 @@ class WorldScene extends PIXI.Container {
       Tiles.grass.sheet = "x0y3";
       Tiles.tree.sheet = "x2y1";
     }
-    if (trees == 0) {
+    if (remainingTrees == 0) {
       this.gameOver.visible = true;
       this.game.gameover = true;
       this.game.drone.volume = 0.1;
     }
 
-    // Helper coins if you didn't place any next to each other!
-    if (this.$$ > 4 && !this.flags.init_spread.done) {
-      this.world.spawnCoinsAtIdx(505);
-    }
-
-    let multiplier = 1;
-    const { prices } = this;
-    if (this.$$ > 1000) {
-      multiplier = Math.min(1.1, 1 + t / 1500);
-      prices.coin = Math.round(prices.coin * multiplier);
-      prices.concrete = Math.round(prices.concrete * multiplier);
-      prices.building = Math.round(prices.building * multiplier);
-
-      if (this.game.tick_length <= 2) {
-        const speed = this.game.tick_length > 1 ? 0.08 : 0.005;
-        this.game.tick_length = Math.max(0.1, this.game.tick_length - speed);
-      }
-    }
-
-    this.dbg.text =
+    dbg.text =
+      t +
+      ") " +
       (percComplete * 100).toFixed(0) +
-      "% " +
-      this.game.tick_length.toFixed(5) +
-      "-" +
-      prices.building +
-      " - " +
-      multiplier.toFixed(3);
+      "%" +
+      " " +
+      remainingTrees +
+      ": " +
+      newBuildings;
   }
 
   update(t) {
@@ -343,6 +353,7 @@ class WorldScene extends PIXI.Container {
     if (t < 4) {
       let o = (4 - t) * 10;
       o = o * o;
+      // TODO: camera should be part of this scene, not game.
       this.game.camera.left = o;
       this.game.camera.top = o;
       return;
@@ -351,7 +362,7 @@ class WorldScene extends PIXI.Container {
     // Update one-ups
     entities.children.forEach(e => e.update(t));
 
-    // TODO: This is dumb - just for tree click (only 1 "action"!)
+    // TODO: Convert these "action" data to real command pattern
     if (actions.length) {
       const a = actions[0];
       if (!a.started) {
@@ -365,15 +376,10 @@ class WorldScene extends PIXI.Container {
         }
         this.axe.visible = true;
         a.doneAt = Date.now() + a.chopTime;
+
         // Only do chop sounds before 100000 - distracts from "heartbeat" effect
         if (this.$$ < 10000) {
-          (function chopSFX() {
-            function play(times) {
-              resources.chop.sound.play();
-              if (times-- > 0) setTimeout(() => play(times), 700);
-            }
-            play(6);
-          })();
+          this.chopWoodSFX();
         }
 
         this.axe.x = a.x * size - 10;
@@ -391,11 +397,11 @@ class WorldScene extends PIXI.Container {
         this.add$(this.prices.coin, a.x * size + 16, a.y * size);
         actions.shift();
         this.axe.visible = false;
-        this.world.build();
+        this.renderTiles();
       }
     }
 
-    // TODO: dialogs... also dumb.
+    // TODO: dialogs... re-write, it's gone crazy.
     if (dialogs.length) {
       const d = dialogs[0];
       if (Date.now() > d.time) {
@@ -414,8 +420,21 @@ class WorldScene extends PIXI.Container {
       }
     }
 
-    // Swing an axe
-    if (this.axe.visible) this.axe.rotation = Math.abs(Math.sin(t * 5));
+    this.swingAxe(t);
+  }
+
+  swingAxe(t) {
+    const { axe } = this;
+    if (!axe.visible) return;
+    axe.rotation = Math.abs(Math.sin(t * 5));
+  }
+
+  chopWoodSFX() {
+    function play(times) {
+      resources.chop.sound.play();
+      if (times-- > 0) setTimeout(() => play(times), 700);
+    }
+    play(6);
   }
 }
 
