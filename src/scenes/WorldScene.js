@@ -347,7 +347,7 @@ class WorldScene extends PIXI.Container {
   }
 
   update(t) {
-    const { actions, flags, dialogs, entities } = this;
+    const { actions, flags, dialogs, entities, axe } = this;
 
     // Pan on start
     if (t < 4) {
@@ -374,7 +374,7 @@ class WorldScene extends PIXI.Container {
           this.dialog.show(flags.second_chop.msg);
           flags.second_chop.done = true;
         }
-        this.axe.visible = true;
+        axe.visible = true;
         a.doneAt = Date.now() + a.chopTime;
 
         // Only do chop sounds before 100000 - distracts from "heartbeat" effect
@@ -382,8 +382,8 @@ class WorldScene extends PIXI.Container {
           this.chopWoodSFX();
         }
 
-        this.axe.x = a.x * size - 10;
-        this.axe.y = a.y * size;
+        axe.x = a.x * size - 10;
+        axe.y = a.y * size;
         a.started = true;
       }
 
@@ -396,7 +396,7 @@ class WorldScene extends PIXI.Container {
 
         this.add$(this.prices.coin, a.x * size + 16, a.y * size);
         actions.shift();
-        this.axe.visible = false;
+        axe.visible = false;
         this.renderTiles();
       }
     }
