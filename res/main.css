@@ -36,6 +36,11 @@ body > div {
     height: 100%;
 }
 
+#info {
+    display: flex;
+    justify-content: space-between;
+}
+
 a {
     color: #993300;
     font-size: 10pt;

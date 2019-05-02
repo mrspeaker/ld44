@@ -30,7 +30,7 @@ function toggleFullScreen() {
 document.querySelector("#fs").addEventListener("click", () => {
   toggleFullScreen();
 });
-document.addEventListener("contextmenu", e => e.preventDefault());
+container.addEventListener("contextmenu", e => e.preventDefault());
 
 PIXI.loader
   .add("sprites", "res/sprites.json")
