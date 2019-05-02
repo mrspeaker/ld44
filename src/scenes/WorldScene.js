@@ -41,8 +41,8 @@ class WorldScene extends PIXI.Container {
     this.flags = flags;
 
     this.prices = { coin: 1, concrete: 13, building: 87 };
-    this.$$ = 0;
-    this.$ = ui.addChild(this.addScoreUI());
+    this.$ = 0;
+    this.$$ = ui.addChild(this.addScoreUI());
     this.gameOver = ui.addChild(this.addGameOverUI());
     this.dbg = ui.addChild(this.addDebugUI(false));
   }
@@ -70,13 +70,13 @@ class WorldScene extends PIXI.Container {
       stroke: "#222222",
       strokeThickness: 5
     });
-    const $ = new PIXI.Text("", style);
+    const $$ = new PIXI.Text("", style);
 
-    $.anchor.set(0.5);
-    $.x = 500;
-    $.y = 300;
-    $.visible = false;
-    return $;
+    $$.anchor.set(0.5);
+    $$.x = 500;
+    $$.y = 300;
+    $$.visible = false;
+    return $$;
   }
 
   addDebugUI(show = true) {
@@ -118,20 +118,20 @@ class WorldScene extends PIXI.Container {
     return go;
   }
 
-  add$($$, x, y) {
-    const { $, entities, world } = this;
-    this.$$ += $$;
-    $.visible = true;
-    $.text = `$${this.$$.toLocaleString("fullwide")}`;
+  add$($, x, y) {
+    const { $$, entities, world } = this;
+    this.$ += $;
+    $$.visible = true;
+    $$.text = `$${this.$.toLocaleString("fullwide")}`;
 
     // add oneup by x,y or tile idx
     if (y) {
-      entities.addChild(new OneUp(x, y, $$));
+      entities.addChild(new OneUp(x, y, $));
     } else if (x) {
       const { tx, ty } = world;
       const xx = x % tx;
       const yy = (x / ty) | 0;
-      entities.addChild(new OneUp(xx * size + 16, yy * size, $$));
+      entities.addChild(new OneUp(xx * size + 16, yy * size, $));
     }
   }
 
@@ -225,13 +225,13 @@ class WorldScene extends PIXI.Container {
     }
 
     // Helper coins if you didn't place any next to each other!
-    if (this.$$ > 4 && !flags.init_spread.done) {
+    if (this.$ > 4 && !flags.init_spread.done) {
       world.spawnCoinsAtCell(8, 8);
     }
 
     // Update $ earned per item
     let multiplier = 1;
-    if (this.$$ > 1000) {
+    if (this.$ > 1000) {
       multiplier = Math.min(1.1, 1 + tick / 1500);
       prices.concrete = Math.round(prices.concrete * multiplier);
       prices.building = Math.round(prices.building * multiplier);
@@ -302,7 +302,7 @@ class WorldScene extends PIXI.Container {
         a.doneAt = Date.now() + a.chopTime;
 
         // Only do chop sounds before 100000 - distracts from "heartbeat" effect
-        if (this.$$ < 10000) {
+        if (this.$ < 10000) {
           this.chopWoodSFX();
         }
 

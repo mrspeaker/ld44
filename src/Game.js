@@ -16,6 +16,7 @@ class Game {
       this.onMoved.bind(this)
     );
     this.ui = new PIXI.Container();
+
     this.scene = new LogoScene(() => {
       this.scene = new WorldScene({}, this.ui, this);
     });
