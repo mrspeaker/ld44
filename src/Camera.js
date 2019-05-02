@@ -11,7 +11,6 @@ class Camera extends PIXI.extras.Viewport {
     });
 
     this.drag()
-      //.pinch()
       .wheel()
       .decelerate()
       .clamp({
@@ -32,22 +31,6 @@ class Camera extends PIXI.extras.Viewport {
         const w = this.toWorld(p.x, p.y);
         onMouseMoved && onMouseMoved(w.x, w.y);
       });
-  }
-  zoomIn(x, y) {
-    this.scale.x += x;
-    this.scale.y += y;
-  }
-  zoomOut(x, y) {
-    this.scale.x -= x;
-    this.scale.y -= y;
-  }
-  zoom(x, y) {
-    this.scale.x = x;
-    this.scale.y = y;
-  }
-  pan(x, y) {
-    this.x -= x;
-    this.y -= y;
   }
 }
 
