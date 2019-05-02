@@ -15,7 +15,7 @@ class World {
       let type = Tiles.grass.id;
 
       if (y == 0 || x == 0 || x == tx - 1 || y == ty - 1) {
-        // type = Tiles.bedrock.id;
+        type = Tiles.bedrock.id;
       }
       return {
         type
