@@ -32,7 +32,7 @@ class WorldScene extends PIXI.Container {
     this.dialog = ui.addChild(new Dialog());
     this.dialog.x = 250;
     this.dialog.y = 480;
-    this.dialog.show("Chop some wood to start earning $$$!");
+    this.addDialog(flags.hello_world);
 
     // TODO: better handling of "actions" - not really used (just to "chop").
     this.actions = [];
@@ -52,11 +52,17 @@ class WorldScene extends PIXI.Container {
     tilemap.build(world);
   }
 
-  addNextDialog(flag) {
-    // TODO: sort by time
+  addDialog(flag) {
+    this.dialogs.push({
+      flag,
+      time: Date.now()
+    });
+
+    // TODO: bad logic - should be able to chain dialogs - can only trigger next one
+    // Maybe "added" when added, "done" when displayed, calc time to show/hide
     if (flag.nextMsg) {
       this.dialogs.push({
-        msg: this.flags[flag.nextMsg],
+        flag: this.flags[flag.nextMsg],
         time: Date.now() + flag.after
       });
     }
@@ -179,54 +185,50 @@ class WorldScene extends PIXI.Container {
   }
 
   tick(tick) {
-    const { flags, world } = this;
-
+    const { world, prices } = this;
     const t = world.tick(tick);
 
     let newBuildings = 0;
+    let didSpread = false;
     t.added.forEach(([i, tile]) => {
       switch (tile.name) {
         case "coin":
-          this.add$(this.prices.coin);
-          // TODO: remove flags - make events?
-          // New coin means there was a "spread"
-          if (!flags.init_spread.done) {
-            flags.init_spread.done = true;
-            flags.init_spread.time = Date.now();
-            this.dialog.show(flags.init_spread.msg);
-            this.addNextDialog(flags.init_spread);
-          }
+          this.add$(prices.coin);
+          didSpread = true;
           break;
         case "concrete":
-          this.add$(this.prices.concrete, i);
+          this.add$(prices.concrete, i);
           break;
         case "building":
-          this.add$(this.prices.building, i);
+          this.add$(prices.building, i);
           newBuildings++;
           break;
         default:
       }
     });
-    this.updatePricesAndSpeed(tick, t.remainingTrees, newBuildings);
+    this.updatePricesAndSpeed(tick, t.remainingTrees, newBuildings, didSpread);
     this.renderTiles();
   }
 
-  updatePricesAndSpeed(tick, remainingTrees, newBuildings) {
+  updatePricesAndSpeed(tick, remainingTrees, newBuildings, didSpread) {
     const { prices, world, dbg, flags } = this;
 
     // Kick drum heartbeat
     if (newBuildings > 0) {
       resources.kick.sound.play();
       // Show "real estate" dialog for first building
-      if (!flags.building1.done) {
-        flags.building1.done = true;
-        this.addNextDialog(flags.building1);
+      if (!flags.building.done) {
+        this.addDialog(flags.building);
       }
     }
 
-    // Helper coins if you didn't place any next to each other!
-    if (this.$ > 4 && !flags.init_spread.done) {
-      world.spawnCoinsAtCell(8, 8);
+    if (!flags.init_spread.done) {
+      if (didSpread) {
+        this.addDialog(flags.init_spread);
+      } else if (this.$ > 4) {
+        // Helper coins if you didn't place any next to each other!
+        world.spawnCoinsAtCell(8, 8);
+      }
     }
 
     // Update $ earned per item
@@ -292,11 +294,9 @@ class WorldScene extends PIXI.Container {
       if (!a.started) {
         // TODO: flags is also dumb
         if (!flags.first_chop.done) {
-          this.dialog.show(flags.first_chop.msg);
-          flags.first_chop.done = true;
+          this.addDialog(flags.first_chop);
         } else if (!flags.second_chop.done) {
-          this.dialog.show(flags.second_chop.msg);
-          flags.second_chop.done = true;
+          this.addDialog(flags.second_chop);
         }
         axe.visible = true;
         a.doneAt = Date.now() + a.chopTime;
@@ -313,8 +313,7 @@ class WorldScene extends PIXI.Container {
 
       if (Date.now() > a.doneAt) {
         if (!flags.first_chop_done.done) {
-          this.dialog.show(flags.first_chop_done.msg);
-          flags.first_chop_done.done = true;
+          this.addDialog(flags.first_chop_done);
         }
         a.tile.type = Tiles.coin.id;
 
@@ -325,19 +324,19 @@ class WorldScene extends PIXI.Container {
       }
     }
 
-    // TODO: dialogs... re-write, it's gone crazy.
     if (dialogs.length) {
-      const d = dialogs[0];
-      if (Date.now() > d.time) {
-        this.dialog.show(d.msg.msg);
-        d.done = true;
-        this.addNextDialog(d.msg);
+      const { flag, time } = dialogs[0];
+      if (Date.now() >= time) {
         dialogs.shift();
-        if (d.msg.nextMsg) {
-          if (d.msg.nextMsg == "second_spread") {
+        this.dialog.show(flag.msg);
+        flag.done = true;
+
+        // TODO: using msgs to trigger game logic: fix it!
+        if (flag.nextMsg) {
+          if (flag.nextMsg == "second_spread") {
             this.game.tick_length = 3;
           }
-          if (d.msg.nextMsg == "third_spread") {
+          if (flag.nextMsg == "third_spread") {
             this.game.tick_length = 2;
           }
         }

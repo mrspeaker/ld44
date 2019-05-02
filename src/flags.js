@@ -1,4 +1,9 @@
 const flags = {
+  blank: { done: false, msg: "" },
+  hello_world: {
+    done: false,
+    msg: "Chop some wood to start earning $$$!"
+  },
   first_chop: { done: false, msg: "" },
   first_chop_done: {
     done: false,
@@ -17,9 +22,10 @@ const flags = {
     nextMsg: "third_spread",
     after: 5000
   },
-  third_spread: { done: false, msg: "" },
-  blank: { done: false, msg: "" },
-  building1: { done: false, msg: "", nextMsg: "building", after: 1 },
+  third_spread: {
+    done: false,
+    msg: ""
+  },
   building: {
     done: false,
     msg: "Big money in real estate... good for you.",
