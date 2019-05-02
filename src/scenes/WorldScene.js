@@ -178,7 +178,7 @@ class WorldScene extends PIXI.Container {
     });
   }
 
-  tick(t) {
+  tick(tick) {
     const { world } = this;
     let remainingTrees = 0;
     let newBuildings = 0;
@@ -283,11 +283,11 @@ class WorldScene extends PIXI.Container {
       tile.type = type.id;
     });
 
-    this.updatePricesAndSpeed(t, remainingTrees, newBuildings);
+    this.updatePricesAndSpeed(tick, remainingTrees, newBuildings);
     this.renderTiles();
   }
 
-  updatePricesAndSpeed(t, remainingTrees, newBuildings) {
+  updatePricesAndSpeed(tick, remainingTrees, newBuildings) {
     const { prices, world, dbg } = this;
 
     // Kick drum heartbeat
@@ -308,7 +308,7 @@ class WorldScene extends PIXI.Container {
     // Update $ earned per item
     let multiplier = 1;
     if (this.$$ > 1000) {
-      multiplier = Math.min(1.1, 1 + t / 1500);
+      multiplier = Math.min(1.1, 1 + tick / 1500);
       prices.concrete = Math.round(prices.concrete * multiplier);
       prices.building = Math.round(prices.building * multiplier);
 
@@ -336,7 +336,7 @@ class WorldScene extends PIXI.Container {
     }
 
     dbg.text =
-      t +
+      tick +
       ") " +
       (percComplete * 100).toFixed(0) +
       "%" +
