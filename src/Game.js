@@ -8,6 +8,8 @@ class Game {
     this.tick = 0;
     this.tick_length = 4;
     this.last_tick_time = 0;
+
+    // TODO: camera should only be in WorldScene
     this.camera = new Camera(
       app,
       this.onClicked.bind(this),
@@ -44,8 +46,8 @@ class Game {
         this.last_tick_time = this.time;
         this.scene.tick(++this.tick);
 
+        // TODO: game should only be coordinatng scenes - not world logic!
         const mod = this.tick_length <= 1.0 ? 4 : 8;
-        //x        this.scene.dgb.text = this.tick_length;
         if (!this.gameover && this.tick > 40 && this.tick % mod == 0) {
           PIXI.loader.resources.pling.sound.play();
           if (!this.drone) {
