@@ -1,16 +1,16 @@
 /* 
-   Genearte a sprite atlas for Pixi.js.
+   Generate a sprite atlas for Pixi.js.
 
-I can't see how to do this without a json file, so I'm just generating a regular 
-rectangular sprite sheet!
-
+Turns the `areas` defined below into json `frames` that can be read by Pixi.js.
+The game uses 1x1 tiles and 2x2 tiles (so far) - different areas can be defined
+for different sizes. When I wrote this comment there were two areas, the first
+was 1x1 tiles in the first 4 columns and 8 rows. Then 2x2 tiles for 2 columns, 4 rows.
 
    `node gen.js`
 
 Outputs `res/sprite.json`
 
 */
-
 const fs = require("fs");
 
 const xt = 8;
@@ -41,6 +41,7 @@ const json = {
 areas.forEach(({ x, y, w, h, tw, th }) => {
   for (let j = 0; j < th; j++) {
     for (let i = 0; i < tw; i++) {
+      // the `ph - h` is because inkscape calls the bottom left (0,0).
       json.frames[`x${x / one + i}y${y / one + j}`] = {
         frame: { x: x + w * i, y: ph - h - (y + h * j), w, h },
         pivot: { x: 0, y: 0 }
@@ -54,5 +55,5 @@ fs.writeFile("res/sprites.json", JSON.stringify(json, null, 2), err => {
     return console.log(err);
   }
   console.log(JSON.stringify(json, null, 2));
-  console.log("atlas generated", xt * one, yt * one);
+  console.log("atlas generated");
 });
