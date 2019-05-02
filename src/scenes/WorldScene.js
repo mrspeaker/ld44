@@ -179,116 +179,40 @@ class WorldScene extends PIXI.Container {
   }
 
   tick(tick) {
-    const { world } = this;
-    let remainingTrees = 0;
+    const { flags, world } = this;
+
+    const t = world.tick(tick);
+
     let newBuildings = 0;
-
-    const added = []; // New cells, not processed in current tick
-    const ns = []; // tmp array for neighbours
-
-    world.cells.forEach((t, i) => {
-      if (t.type === Tiles.skull.id) {
-        if (Math.random() < 0.05) {
-          t.type = Tiles.grass.id;
-        }
-        return;
-      }
-      if (t.type === Tiles.tree.id) remainingTrees++;
-      if (t.hide || TilesById[t.type].noRule) {
-        return;
-      }
-
-      world.getNeighbours(i, ns);
-      const n = ns.reduce(
-        (ac, el) => {
-          // TODO: clean up counts
-          if (!el || el.type === Tiles.bedrock.id) {
-            ac.concrete++;
-            return ac;
-          }
-          if (el.type === Tiles.coin.id) ac.coins++;
-          if (el.type === Tiles.grass.id) ac.blanks++;
-          if (el.type === Tiles.tree.id) ac.trees++;
-          if (el.type === Tiles.concrete.id) ac.concrete++;
-          if (el.type === Tiles.building.id) ac.buildings++;
-          return ac;
-        },
-        { coins: 0, blanks: 0, trees: 0, concrete: 0, buildings: 0 }
-      );
-
-      const crapThings = n.coins + n.concrete + n.buildings;
-
-      // Cellular automata rules
-      switch (t.type) {
-        case Tiles.grass.id:
-          if (n.coins >= 2 || crapThings > 7) {
-            added.push([i, Tiles.coin]);
-            this.add$(this.prices.coin);
-
-            // TODO: remove flags - make events
-            if (!flags.init_spread.done) {
-              flags.init_spread.done = true;
-              flags.init_spread.time = Date.now();
-              this.dialog.show(flags.init_spread.msg);
-              this.addNextDialog(flags.init_spread);
-            }
+    t.added.forEach(([i, tile]) => {
+      switch (tile.name) {
+        case "coin":
+          this.add$(this.prices.coin);
+          // TODO: remove flags - make events?
+          // New coin means there was a "spread"
+          if (!flags.init_spread.done) {
+            flags.init_spread.done = true;
+            flags.init_spread.time = Date.now();
+            this.dialog.show(flags.init_spread.msg);
+            this.addNextDialog(flags.init_spread);
           }
           break;
-        case Tiles.tree.id:
-          if (n.coins > 0 && n.blanks === 0) {
-            // Starved, so die
-            added.push([i, Tiles.skull]);
-          }
+        case "concrete":
+          this.add$(this.prices.concrete, i);
           break;
-        case Tiles.coin.id:
-          if (crapThings >= 8) {
-            this.add$(this.prices.concrete, i);
-            added.push([i, Tiles.concrete]);
-          }
-          if (n.trees > 0) {
-            // "Magic flip" to kill some trees randomly - stops pockets of green!
-            if (Math.random() < 0.005) {
-              ns.find(n => n && n.type === Tiles.tree.id).type = Tiles.skull.id;
-            }
-          }
+        case "building":
+          this.add$(this.prices.building, i);
+          newBuildings++;
           break;
-        case Tiles.concrete.id:
-          if (n.concrete > 3) {
-            // Check if 4 tiles are concrete: convert to building
-            const c = Tiles.concrete.id;
-            const sq = [5, 7, 8];
-            if (
-              sq.every(ni => {
-                const n = ns[ni];
-                return n && n.type == c && !n.hide;
-              })
-            ) {
-              t.type = Tiles.building.id;
-              t.frame =
-                Math.random() < 0.7
-                  ? Tiles.building.sheet
-                  : Tiles.building.sheetAlt;
-              sq.forEach(ni => (ns[ni].hide = true));
-              this.add$(this.prices.building, i);
-              newBuildings++;
-            }
-          }
-          break;
+        default:
       }
     });
-
-    // Make changes AFTER initial pass over tiles
-    added.forEach(([i, type]) => {
-      const tile = world.cells[i];
-      tile.type = type.id;
-    });
-
-    this.updatePricesAndSpeed(tick, remainingTrees, newBuildings);
+    this.updatePricesAndSpeed(tick, t.remainingTrees, newBuildings);
     this.renderTiles();
   }
 
   updatePricesAndSpeed(tick, remainingTrees, newBuildings) {
-    const { prices, world, dbg } = this;
+    const { prices, world, dbg, flags } = this;
 
     // Kick drum heartbeat
     if (newBuildings > 0) {
