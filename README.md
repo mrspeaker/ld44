@@ -1,6 +1,6 @@
 # LD44: Takes money
 
-My entry for the Ludum Dare #44 game jame on the theme "Your life is currency". Not really a game, but you can [PLAY NOW](https://mrspeaker.github.io/ld44/)!
+[My entry](https://ldjam.com/events/ludum-dare/44/takes-money) for the Ludum Dare #44 game jame on the theme "Your life is currency". Not really a game, but you can [PLAY NOW](https://mrspeaker.github.io/ld44/)!
 
 [![ld44](https://user-images.githubusercontent.com/129330/56872847-67c23780-69fb-11e9-86d9-f36b6196b291.png)](https://mrspeaker.github.io/ld44/)
 
