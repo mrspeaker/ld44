@@ -42,6 +42,11 @@ body > div {
     display: none;
 }
 
+#loading span {
+    display: inline-block;
+    padding-right: 150px;
+}
+
 #info {
     display: flex;
     justify-content: space-between;
