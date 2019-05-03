@@ -14,13 +14,16 @@ class WorldScene extends PIXI.Container {
   constructor(ui, camera) {
     super();
 
-    this.camera = camera;
-
     this.tick_num = 0;
     this.tick_length = 4;
     this.last_tick_time = 0;
 
-    this.world = new World(100, 100, 0.295);
+    const width = 100;
+    const height = 100;
+    this.camera = camera;
+    camera.worldWidth = width * size;
+    camera.worldHeight = height * size;
+    this.world = new World(width, height, 0.295);
     this.tilemap = this.addChild(new WorldTileMap());
     this.renderTiles();
 

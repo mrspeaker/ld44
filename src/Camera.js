@@ -2,13 +2,9 @@ import PIXI from "../lib/pixi.js";
 
 class Camera extends PIXI.extras.Viewport {
   constructor(app, onPointerClicked, onMouseMoved) {
-    // TODO: bounds are copy-paste here
     super({
-      screenWidth: 1000,
-      screenHeight: 600,
-      // Should be defined inside scene
-      worldWidth: 100 * 32,
-      worldHeight: 100 * 32,
+      screenWidth: app.renderer.width,
+      screenHeight: app.renderer.height,
       interaction: app.renderer.plugins.interaction
     });
 
