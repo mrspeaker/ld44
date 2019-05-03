@@ -1,3 +1,4 @@
+import PIXI from "../lib/pixi.js";
 import Camera from "./Camera.js";
 import WorldScene from "./scenes/WorldScene.js";
 import LogoScene from "./scenes/LogoScene.js";

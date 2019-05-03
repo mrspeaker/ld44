@@ -6,7 +6,7 @@ import OneUp from "../entities/OneUp.js";
 import Axe from "../entities/Axe.js";
 import flags from "../flags.js";
 
-import { Tiles, TilesById, size } from "../tiles.js";
+import { Tiles, size } from "../tiles.js";
 
 const { resources } = PIXI.loader;
 
@@ -167,7 +167,7 @@ class WorldScene extends PIXI.Container {
   }
 
   onMoved(x, y) {
-    const { cursor, world, flags } = this;
+    const { cursor, world } = this;
     const { xo, yo } = world.getCellIndices(x, y);
     cursor.x = xo * size;
     cursor.y = yo * size;

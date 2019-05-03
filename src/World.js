@@ -53,7 +53,7 @@ class World {
     return ns;
   }
 
-  tick(tick) {
+  tick() {
     const { cells } = this;
     let remainingTrees = 0;
 

@@ -18,7 +18,6 @@ const yt = 8;
 
 const one = 32;
 const two = one * 2;
-const three = one * 3;
 
 const pw = xt * one;
 const ph = yt * one;

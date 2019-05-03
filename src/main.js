@@ -13,7 +13,7 @@ PIXI.loader
   .add("dialogbeep", "res/audio/dialogbeep.mp3")
   .add("kick", "res/audio/kick.mp3")
   .add("pling", "res/audio/pling.mp3")
-  .load((loader, resources) => {
+  .load(() => {
     // Let's go!
     const game = new Game();
     addGameToDOM("#container", game.view);
