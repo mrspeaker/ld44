@@ -28,17 +28,21 @@ class Game extends PIXI.Application {
   }
   showLogoScreen() {
     this.scene = new LogoScene(this.ui, () => {
+      this.clearUI();
       this.scene = new WorldScene(this.ui, this.camera);
     });
   }
+  clearUI() {
+    const { ui } = this;
+    // Remove anything added to UI
+    while (ui.children[0]) {
+      ui.removeChild(ui.children[0]);
+    }
+  }
   set scene(scene) {
-    const { _scene, camera, ui } = this;
+    const { _scene, camera } = this;
     if (_scene) {
       camera.removeChild(_scene);
-      // Remove anything added to UI too
-      while (ui.children[0]) {
-        ui.removeChild(ui.children[0]);
-      }
     }
     this._scene = scene;
     camera.addChild(scene);
