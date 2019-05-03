@@ -77,33 +77,33 @@ class World {
       this.getNeighbours(i, ns);
       const n = ns.reduce(
         (ac, el) => {
-          // TODO: clean up counts
+          // NOTE: counts are "unraveled" into specific types for perf.
           if (!el || el.type === Tiles.bedrock.id) {
             ac.concrete++;
             return ac;
           }
-          if (el.type === Tiles.coin.id) ac.coins++;
+          if (el.type === Tiles.coin.id) ac.coin++;
           if (el.type === Tiles.grass.id) ac.grass++;
-          if (el.type === Tiles.tree.id) ac.trees++;
+          if (el.type === Tiles.tree.id) ac.tree++;
           if (el.type === Tiles.concrete.id) ac.concrete++;
-          if (el.type === Tiles.building.id) ac.buildings++;
+          if (el.type === Tiles.building.id) ac.building++;
           return ac;
         },
-        { coins: 0, grass: 0, trees: 0, concrete: 0, buildings: 0 }
+        { coin: 0, grass: 0, tree: 0, concrete: 0, building: 0 }
       );
 
-      const crapThings = n.coins + n.concrete + n.buildings;
+      const crapThings = n.coin + n.concrete + n.building;
 
       // Cellular automata rules
       switch (t.type) {
         case Tiles.grass.id:
-          if (n.coins >= 2 || crapThings > 7) {
+          if (n.coin >= 2 || crapThings > 7) {
             addAfterTick.push([i, Tiles.coin]);
           }
           break;
 
         case Tiles.tree.id:
-          if (n.coins > 0 && n.grass === 0) {
+          if (n.coin > 0 && n.grass === 0) {
             // Starved, so die
             addAfterTick.push([i, Tiles.skull]);
           } else {
@@ -115,7 +115,7 @@ class World {
           if (crapThings >= 8) {
             addAfterTick.push([i, Tiles.concrete]);
           }
-          if (n.trees > 0) {
+          if (n.tree > 0) {
             // "Magic flip" to kill some trees randomly - stops pockets of green!
             if (Math.random() < 0.005) {
               ns.find(n => n && n.type === Tiles.tree.id).type = Tiles.skull.id;
