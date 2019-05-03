@@ -34,7 +34,6 @@ class Game extends PIXI.Application {
   }
   clearUI() {
     const { ui } = this;
-    // Remove anything added to UI
     while (ui.children[0]) {
       ui.removeChild(ui.children[0]);
     }

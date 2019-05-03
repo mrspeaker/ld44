@@ -66,7 +66,7 @@ class World {
         return;
       }
 
-      // Dead trees become grass randomly, don't need processing
+      // Dead trees become grass randomly (otherwise don't need processing)
       if (t.type === Tiles.skull.id) {
         if (Math.random() < 0.05) {
           t.type = Tiles.grass.id;
@@ -83,13 +83,13 @@ class World {
             return ac;
           }
           if (el.type === Tiles.coin.id) ac.coins++;
-          if (el.type === Tiles.grass.id) ac.blanks++;
+          if (el.type === Tiles.grass.id) ac.grass++;
           if (el.type === Tiles.tree.id) ac.trees++;
           if (el.type === Tiles.concrete.id) ac.concrete++;
           if (el.type === Tiles.building.id) ac.buildings++;
           return ac;
         },
-        { coins: 0, blanks: 0, trees: 0, concrete: 0, buildings: 0 }
+        { coins: 0, grass: 0, trees: 0, concrete: 0, buildings: 0 }
       );
 
       const crapThings = n.coins + n.concrete + n.buildings;
@@ -101,14 +101,16 @@ class World {
             addAfterTick.push([i, Tiles.coin]);
           }
           break;
+
         case Tiles.tree.id:
-          if (n.coins > 0 && n.blanks === 0) {
+          if (n.coins > 0 && n.grass === 0) {
             // Starved, so die
             addAfterTick.push([i, Tiles.skull]);
           } else {
             remainingTrees++;
           }
           break;
+
         case Tiles.coin.id:
           if (crapThings >= 8) {
             addAfterTick.push([i, Tiles.concrete]);
@@ -120,6 +122,7 @@ class World {
             }
           }
           break;
+
         case Tiles.concrete.id:
           if (n.concrete > 3) {
             // Check if 4 tiles are concrete: convert to building
