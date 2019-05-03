@@ -1,51 +1,25 @@
 # LD44: Takes money
 
-[My entry](https://ldjam.com/events/ludum-dare/44/takes-money) for the Ludum Dare #44 game jame on the theme "Your life is currency". Not really a game, but you can [PLAY NOW](https://mrspeaker.github.io/ld44/)!
+[Takes Money](https://mrspeaker.github.io/ld44/) - entry for the Ludum Dare #44 game jame on the theme "Your life is currency". Not really a game, but you can [PLAY NOW](https://mrspeaker.github.io/ld44/)!
 
 [![ld44](https://user-images.githubusercontent.com/129330/56872847-67c23780-69fb-11e9-86d9-f36b6196b291.png)](https://mrspeaker.github.io/ld44/)
 
 ## POST MORTEM
 
-Nope, didn't make it! Started something, but didn't go all in. To "play"... click on a tree, it will chop down and you get a coin. Click on another tree that is close to the other coin... it will start a cellular automata that takes over, and you have nothing else to do.
+Didn't get anything done for the compo, but ended up submitting this "art game" for the jam ([Take Money entry page](https://ldjam.com/events/ludum-dare/44/takes-money)). I was happy with how it turned out (though I think it might not have been well understood by fellow LD judges... ah well!).
 
-[Cellular Automata thingo](https://mrspeaker.github.io/ld44/)
-
-The code is a crazy bunch of crazy... but will be fun to refactor!
+I got to learn a bit of Inkscape, which was one of my goals. Also got to make a cellular automata too - my other goal. So, objectives complete!
 
 ![Sprite sheet](https://raw.githubusercontent.com/mrspeaker/ld44/master/res/sprites.png)
 
-## Jam notes
+## Post jam TODOs
 
-hmm, could get something in for the jam! [Edit: yep, got something in - [Ludum Dare jam entry](https://ldjam.com/events/ludum-dare/44/takes-money)
-
-TODO:
-
-[DONE]
-
-Low Priority:
-- pacing: use tree% + time to dictate speed / $$$
-- pacing:  make it take almost exactly 3 minutes. (maybe not so important -seem to be about that)
-- would be cool to force you to cut down last tree.
-- audio sad trombone (or happy do do da dooo! trumpet?!)  death screen sfx
 - More dead states for trees (turn brown/black)
+- Quickly kill off last trees (can get stuck)
+- Make sure spreading logic dosn't go when not spreading
 - Building anim - take a tick to build the building
 - SPin up $ in UPdate instead of updating instatly in Tick
 - make roads when concrete in a line
-- make the world repeateable - no edge.
--- $ font gets bigger over time, pulses?
--- music starts jolly/ditty... goes darker and horrible
-
-- move tick logic out of Game and into WorldScene. Move tilemap out of WorldScene and into it's own class.
-
-## Pre LD notes
-OOOh, it's happening again. Not sure where this will go, but probably I'll be using:
-
-* Pixi.js for rendering
-* Emacs
-
-The rest up to the gods.
-
-## Pixi notes
-
-- https://pixijs.io/examples/
-- http://www.html5gamedevs.com/forum/15-pixijs/
+- make the world repeateable - no edges
+- music becomes more cachophonous/intense towards end.
+- could be turned into a game where you try to *prevent* spreading
