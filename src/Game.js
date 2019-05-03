@@ -2,40 +2,57 @@ import Camera from "./Camera.js";
 import WorldScene from "./scenes/WorldScene.js";
 import LogoScene from "./scenes/LogoScene.js";
 
-class Game {
-  constructor(app) {
+class Game extends PIXI.Application {
+  constructor() {
+    super({
+      width: 1000,
+      height: 600,
+      backgroundColor: 0x101017,
+      resolution: window.devicePixelRatio || 1
+    });
+
     this.time = 0;
 
-    // TODO: camera should only be in WorldScene
     this.camera = new Camera(
-      app,
+      this,
       this.onClicked.bind(this),
       this.onMoved.bind(this)
     );
     this.ui = new PIXI.Container();
 
-    this.scene = new LogoScene(() => {
-      this.scene = new WorldScene({}, this.ui, this);
+    this.stage.addChild(this.camera);
+    this.stage.addChild(this.ui);
+    this.ticker.add(this.update.bind(this));
+
+    this.showLogoScreen();
+  }
+  showLogoScreen() {
+    this.scene = new LogoScene(this.ui, () => {
+      this.scene = new WorldScene(this.ui, this.camera);
     });
-    this.update = this.update.bind(this);
   }
   set scene(scene) {
-    if (this._scene) {
-      this.camera.removeChild(this._scene);
+    const { _scene, camera, ui } = this;
+    if (_scene) {
+      camera.removeChild(_scene);
+      // Remove anything added to UI too
+      while (ui.children[0]) {
+        ui.removeChild(ui.children[0]);
+      }
     }
     this._scene = scene;
-    this.camera.addChild(scene);
+    camera.addChild(scene);
   }
   get scene() {
     return this._scene;
   }
   onClicked(x, y, isShift) {
     const { scene } = this;
-    scene && scene.onClicked && scene.onClicked(x, y, isShift);
+    scene.onClicked && scene.onClicked(x, y, isShift);
   }
   onMoved(x, y) {
     const { scene } = this;
-    scene && scene.onMoved && scene.onMoved(x, y);
+    scene.onMoved && scene.onMoved(x, y);
   }
   update(dt) {
     this.time += dt * (1 / 60);

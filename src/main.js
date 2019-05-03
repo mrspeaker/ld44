@@ -1,36 +1,5 @@
 import PIXI from "../lib/pixi.js";
-
 import Game from "./Game.js";
-
-const app = new PIXI.Application({
-  width: 1000,
-  height: 600,
-  backgroundColor: 0x101017,
-  resolution: window.devicePixelRatio || 1
-});
-
-const container = document.querySelector("#container");
-container.appendChild(app.view);
-
-function toggleFullScreen() {
-  if (!document.fullscreen && !document.webkitFullScreen) {
-    if (container.requestFullscreen) {
-      container.requestFullscreen();
-    } else {
-      container.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
-    }
-  } else {
-    if (document.cancelFullscreen) {
-      document.cancelFullscreen();
-    } else {
-      document.webkitCancelFullScreen();
-    }
-  }
-}
-document.querySelector("#fs").addEventListener("click", () => {
-  toggleFullScreen();
-});
-container.addEventListener("contextmenu", e => e.preventDefault());
 
 PIXI.loader
   .add("sprites", "res/sprites.json")
@@ -42,8 +11,31 @@ PIXI.loader
   .add("kick", "res/audio/kick.mp3")
   .add("pling", "res/audio/pling.mp3")
   .load((loader, resources) => {
-    const game = new Game(app);
-    app.stage.addChild(game.camera);
-    app.stage.addChild(game.ui);
-    app.ticker.add(game.update);
+    // Let's go!
+    const game = new Game();
+    addGameToDOM("#container", game.view);
   });
+
+function addGameToDOM(parent, view) {
+  const container = document.querySelector(parent);
+  container.appendChild(view);
+
+  // Handle full screen
+  document.querySelector("#fs").addEventListener("click", () => {
+    if (!document.fullscreen && !document.webkitFullScreen) {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else {
+        container.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+      }
+    } else {
+      if (document.cancelFullscreen) {
+        document.cancelFullscreen();
+      } else {
+        document.webkitCancelFullScreen();
+      }
+    }
+  });
+  // No right-click on game screen
+  container.addEventListener("contextmenu", e => e.preventDefault());
+}

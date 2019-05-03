@@ -4,7 +4,7 @@ import Logo from "../entities/Logo.js";
 const { resources } = PIXI.loader;
 
 class LogoScene extends PIXI.Container {
-  constructor(onDone) {
+  constructor(ui, onDone) {
     super();
     const logo = new Logo();
     logo.x = 500;
@@ -12,7 +12,7 @@ class LogoScene extends PIXI.Container {
     logo.anchor.x = 0.5;
     logo.anchor.y = 0.5;
     this.onDone = onDone;
-    this.addChild(logo);
+    ui.addChild(logo);
 
     resources.logosfx.sound.play();
   }

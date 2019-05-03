@@ -11,10 +11,10 @@ import { Tiles, TilesById, size } from "../tiles.js";
 const { resources } = PIXI.loader;
 
 class WorldScene extends PIXI.Container {
-  constructor(bounds, ui, game) {
+  constructor(ui, camera) {
     super();
 
-    this.game = game; // TODO: remove refs to game from this class
+    this.camera = camera;
 
     this.tick_num = 0;
     this.tick_length = 4;
@@ -282,12 +282,11 @@ class WorldScene extends PIXI.Container {
 
     dbg.text =
       tick +
-      ") " +
-      (percComplete * 100).toFixed(0) +
-      "%" +
       " " +
+      (percComplete * 100).toFixed(0) +
+      "% t:" +
       remainingTrees +
-      ": " +
+      " b:" +
       newBuildings;
   }
 
@@ -296,6 +295,7 @@ class WorldScene extends PIXI.Container {
 
     // Determine tick
     if (time > (this.tick_num + 1) * this.tick_length) {
+      // Fix for changing tick_length lower and ticking mulitple times quickly
       if (time - this.last_tick_time >= this.tick_length) {
         this.last_tick_time = time;
         this.tick(++this.tick_num);
@@ -306,9 +306,8 @@ class WorldScene extends PIXI.Container {
     if (time < 4) {
       let o = (4 - time) * 10;
       o = o * o;
-      // TODO: camera should be part of this scene, not game.
-      this.game.camera.left = o;
-      this.game.camera.top = o;
+      this.camera.left = o;
+      this.camera.top = o;
       return;
     }
 
