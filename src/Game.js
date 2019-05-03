@@ -5,9 +5,6 @@ import LogoScene from "./scenes/LogoScene.js";
 class Game {
   constructor(app) {
     this.time = 0;
-    this.tick = 0;
-    this.tick_length = 4;
-    this.last_tick_time = 0;
 
     // TODO: camera should only be in WorldScene
     this.camera = new Camera(
@@ -42,24 +39,6 @@ class Game {
   }
   update(dt) {
     this.time += dt * (1 / 60);
-    if (this.time > (this.tick + 1) * this.tick_length) {
-      if (this.time - this.last_tick_time >= this.tick_length) {
-        this.last_tick_time = this.time;
-        this.scene.tick(++this.tick);
-
-        // TODO: game should only be coordinatng scenes - not world logic!
-        const mod = this.tick_length <= 1.0 ? 4 : 8;
-        if (!this.gameover && this.tick > 40 && this.tick % mod == 0) {
-          PIXI.loader.resources.pling.sound.play();
-          if (!this.drone) {
-            const drone = PIXI.loader.resources.drone.sound;
-            drone.volume = 0.2;
-            drone.play({ loop: true });
-            this.drone = drone;
-          }
-        }
-      }
-    }
     this.scene.update(this.time);
   }
 }

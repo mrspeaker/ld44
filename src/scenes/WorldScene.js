@@ -16,6 +16,10 @@ class WorldScene extends PIXI.Container {
 
     this.game = game; // TODO: remove refs to game from this class
 
+    this.tick_num = 0;
+    this.tick_length = 4;
+    this.last_tick_time = 0;
+
     this.world = new World(100, 100, 0.295);
     this.tilemap = this.addChild(new WorldTileMap());
     this.renderTiles();
@@ -43,7 +47,10 @@ class WorldScene extends PIXI.Container {
     this.prices = { coin: 1, concrete: 13, building: 87 };
     this.$ = 0;
     this.$$ = ui.addChild(this.addScoreUI());
-    this.gameOver = ui.addChild(this.addGameOverUI());
+    this.gameOver = false;
+    this.gameOverUI = ui.addChild(this.addGameOverUI());
+    this.droneSFX = null;
+
     this.dbg = ui.addChild(this.addDebugUI(false));
   }
 
@@ -211,7 +218,7 @@ class WorldScene extends PIXI.Container {
   }
 
   updatePricesAndSpeed(tick, remainingTrees, newBuildings, didSpread) {
-    const { prices, world, dbg, flags } = this;
+    const { prices, world, dbg, flags, gameOver, tick_length } = this;
 
     // Kick drum heartbeat
     if (newBuildings > 0) {
@@ -219,6 +226,19 @@ class WorldScene extends PIXI.Container {
       // Show "real estate" dialog for first building
       if (!flags.building.done) {
         this.addDialog(flags.building);
+      }
+    }
+
+    // EKG machine and Drone
+    const ekgStartTick = 40;
+    const mod = tick_length <= 1.0 ? 4 : 8;
+    if (!gameOver && tick > ekgStartTick && tick % mod == 0) {
+      resources.pling.sound.play();
+      if (!this.droneSFX) {
+        const drone = resources.drone.sound;
+        drone.volume = 0.2;
+        drone.play({ loop: true });
+        this.droneSFX = drone;
       }
     }
 
@@ -238,11 +258,10 @@ class WorldScene extends PIXI.Container {
       prices.concrete = Math.round(prices.concrete * multiplier);
       prices.building = Math.round(prices.building * multiplier);
 
-      // TODO: ticks should be controlled by this scene.
       // TODO: don't increase until after spreading (or when not spreading)
-      if (this.game.tick_length <= 2) {
-        const speed = this.game.tick_length > 1 ? 0.08 : 0.005;
-        this.game.tick_length = Math.max(0.1, this.game.tick_length - speed);
+      if (this.tick_length <= 2) {
+        const speed = this.tick_length > 1 ? 0.08 : 0.005;
+        this.tick_length = Math.max(0.1, this.tick_length - speed);
       }
     }
 
@@ -256,9 +275,9 @@ class WorldScene extends PIXI.Container {
       Tiles.tree.sheet = "x2y1";
     }
     if (remainingTrees == 0) {
-      this.gameOver.visible = true;
-      this.game.gameover = true;
-      this.game.drone.volume = 0.1;
+      this.gameOver = true;
+      this.gameOverUI.visible = true;
+      this.droneSFX.volume = 0.1;
     }
 
     dbg.text =
@@ -272,12 +291,20 @@ class WorldScene extends PIXI.Container {
       newBuildings;
   }
 
-  update(t) {
+  update(time) {
     const { actions, flags, dialogs, entities, axe } = this;
 
+    // Determine tick
+    if (time > (this.tick_num + 1) * this.tick_length) {
+      if (time - this.last_tick_time >= this.tick_length) {
+        this.last_tick_time = time;
+        this.tick(++this.tick_num);
+      }
+    }
+
     // Pan on start
-    if (t < 4) {
-      let o = (4 - t) * 10;
+    if (time < 4) {
+      let o = (4 - time) * 10;
       o = o * o;
       // TODO: camera should be part of this scene, not game.
       this.game.camera.left = o;
@@ -286,7 +313,7 @@ class WorldScene extends PIXI.Container {
     }
 
     // Update one-ups
-    entities.children.forEach(e => e.update(t));
+    entities.children.forEach(e => e.update(time));
 
     // TODO: Convert these "action" data to real command pattern
     if (actions.length) {
@@ -334,22 +361,22 @@ class WorldScene extends PIXI.Container {
         // TODO: using msgs to trigger game logic: fix it!
         if (flag.nextMsg) {
           if (flag.nextMsg == "second_spread") {
-            this.game.tick_length = 3;
+            this.tick_length = 3;
           }
           if (flag.nextMsg == "third_spread") {
-            this.game.tick_length = 2;
+            this.tick_length = 2;
           }
         }
       }
     }
 
-    this.swingAxe(t);
+    this.swingAxe(time);
   }
 
-  swingAxe(t) {
+  swingAxe(time) {
     const { axe } = this;
     if (!axe.visible) return;
-    axe.rotation = Math.abs(Math.sin(t * 5));
+    axe.rotation = Math.abs(Math.sin(time * 5));
   }
 
   chopWoodSFX() {
