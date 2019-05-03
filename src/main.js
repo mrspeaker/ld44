@@ -1,6 +1,9 @@
 import PIXI from "../lib/pixi.js";
 import Game from "./Game.js";
 
+const loading = document.querySelector("#loading");
+loading.style.display = "block";
+
 PIXI.loader
   .add("sprites", "res/sprites.json")
   .add("chop", "res/audio/chop.mp3")
@@ -19,6 +22,8 @@ PIXI.loader
 function addGameToDOM(parent, view) {
   const container = document.querySelector(parent);
   container.appendChild(view);
+
+  loading.style.display = "none";
 
   // Handle full screen
   document.querySelector("#fs").addEventListener("click", () => {
