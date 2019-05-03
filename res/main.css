@@ -29,6 +29,8 @@ body > div {
     border: 10px solid #dd4327;
     border-radius: 10px;
     cursor: none;
+    min-width: 1000px;
+    min-height: 600px;
 }
 
 #container > canvas {
