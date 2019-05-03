@@ -36,13 +36,11 @@ class WorldScene extends PIXI.Container {
     this.dialog = ui.addChild(new Dialog());
     this.dialog.x = 250;
     this.dialog.y = 480;
-    this.addDialog(flags.hello_world);
+    this.flags = flags();
+    this.addDialog(this.flags.hello_world);
 
     // TODO: better handling of "actions" - not really used (just to "chop").
     this.actions = [];
-
-    // TODO: fire events for dialog, remove from here
-    this.flags = flags;
 
     this.prices = { coin: 1, concrete: 13, building: 87 };
     this.$ = 0;
@@ -295,7 +293,7 @@ class WorldScene extends PIXI.Container {
 
     // Determine tick
     if (time > (this.tick_num + 1) * this.tick_length) {
-      // Fix for changing tick_length lower and ticking mulitple times quickly
+      // A fix for changing tick_length lower and ticking mulitple times quickly
       if (time - this.last_tick_time >= this.tick_length) {
         this.last_tick_time = time;
         this.tick(++this.tick_num);
@@ -318,7 +316,6 @@ class WorldScene extends PIXI.Container {
     if (actions.length) {
       const a = actions[0];
       if (!a.started) {
-        // TODO: flags is also dumb
         if (!flags.first_chop.done) {
           this.addDialog(flags.first_chop);
         } else if (!flags.second_chop.done) {

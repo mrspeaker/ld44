@@ -1,4 +1,4 @@
-const flags = {
+const flags = () => ({
   blank: { done: false, msg: "" },
   hello_world: {
     done: false,
@@ -32,6 +32,6 @@ const flags = {
     nextMsg: "blank",
     after: 5000
   }
-};
+});
 
 export default flags;
