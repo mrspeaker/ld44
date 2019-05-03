@@ -31,6 +31,10 @@ const flags = () => ({
     msg: "Big money in real estate... good for you.",
     nextMsg: "blank",
     after: 5000
+  },
+  game_over: {
+    done: false,
+    msg: ""
   }
 });
 

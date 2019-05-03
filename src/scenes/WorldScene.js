@@ -45,7 +45,6 @@ class WorldScene extends PIXI.Container {
     this.prices = { coin: 1, concrete: 13, building: 87 };
     this.$ = 0;
     this.$$ = ui.addChild(this.addScoreUI());
-    this.gameOver = false;
     this.gameOverUI = ui.addChild(this.addGameOverUI());
     this.droneSFX = null;
 
@@ -58,13 +57,15 @@ class WorldScene extends PIXI.Container {
   }
 
   addDialog(flag) {
+    // TODO: flags and dialogs concepts are not clear: refactor.
+    // Maybe "added" when added, "done" when displayed, calc time to show/hide?
+    // `addDialog` could be `doFlag` (would work nicer for game_over flag)
     this.dialogs.push({
       flag,
       time: Date.now()
     });
 
     // TODO: bad logic - should be able to chain dialogs - can only trigger next one
-    // Maybe "added" when added, "done" when displayed, calc time to show/hide
     if (flag.nextMsg) {
       this.dialogs.push({
         flag: this.flags[flag.nextMsg],
@@ -216,7 +217,7 @@ class WorldScene extends PIXI.Container {
   }
 
   updatePricesAndSpeed(tick, remainingTrees, newBuildings, didSpread) {
-    const { prices, world, dbg, flags, gameOver, tick_length } = this;
+    const { prices, world, dbg, flags, tick_length } = this;
 
     // Kick drum heartbeat
     if (newBuildings > 0) {
@@ -230,7 +231,7 @@ class WorldScene extends PIXI.Container {
     // EKG machine and Drone
     const ekgStartTick = 40;
     const mod = tick_length <= 1.0 ? 4 : 8;
-    if (!gameOver && tick > ekgStartTick && tick % mod == 0) {
+    if (!flags.game_over.done && tick > ekgStartTick && tick % mod == 0) {
       resources.pling.sound.play();
       if (!this.droneSFX) {
         const drone = resources.drone.sound;
@@ -273,7 +274,7 @@ class WorldScene extends PIXI.Container {
       Tiles.tree.sheet = "x2y1";
     }
     if (remainingTrees == 0) {
-      this.gameOver = true;
+      flags.game_over.done = true;
       this.gameOverUI.visible = true;
       this.droneSFX.volume = 0.1;
     }
