@@ -14,7 +14,10 @@ class Camera extends PIXI.extras.Viewport {
       .clamp({
         direction: "all"
       })
-      .clampZoom({ maxWidth: 1500, minWidth: 1000 })
+      .clampZoom({
+        maxWidth: app.renderer.width * 1.5,
+        minWidth: app.renderer.width
+      })
       .on("drag-start", () => (this.isDrag = true))
       .on("drag-end", () => (this.isDrag = false))
       .on("click", e => {
